@@ -461,7 +461,7 @@ body { font-family: var(--sans); background: var(--linen); color: var(--ink); ov
   <main class="main">
     <div class="main-header">
       <div class="main-header-left">
-        <h2 id="view-title">Good morning, Katie.</h2>
+        <h2 id="view-title"></h2>
         <p id="view-sub">Here's where things stand today.</p>
       </div>
       <div class="main-header-actions">
@@ -486,6 +486,9 @@ body { font-family: var(--sans); background: var(--linen); color: var(--ink); ov
               <button class="btn btn-primary btn-sm" onclick="dashAsk()">Ask</button>
             </div>
             <div class="ai-response" id="dash-ai-resp"></div>
+            <div style="margin-top:10px;text-align:right;">
+              <button class="btn btn-primary btn-sm" onclick="saveDashJournal()">Save entry</button>
+            </div>
           </div>
 
           <!-- Rituals + Daily Checklist -->
@@ -537,6 +540,16 @@ body { font-family: var(--sans); background: var(--linen); color: var(--ink); ov
             <div id="dash-debt-list"></div>
           </div>
 
+          <!-- Supplements -->
+          <div class="card g-wide">
+            <div class="card-accent" style="background:var(--plum)"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <div class="card-label" style="margin-bottom:0;">Daily supplements</div>
+              <span style="font-size:11px;color:var(--ink-light);font-family:var(--lora);font-style:italic;" id="supp-progress"></span>
+            </div>
+            <div id="supp-list" style="display:grid;grid-template-columns:1fr 1fr;gap:0;"></div>
+          </div>
+
         </div>
       </div>
 
@@ -566,7 +579,7 @@ body { font-family: var(--sans); background: var(--linen); color: var(--ink); ov
           <button class="gtab" onclick="showGTab('flow',this)">Daily Flow</button>
           <button class="gtab" onclick="showGTab('anchors',this)">Daily Anchors</button>
           <button class="gtab" onclick="showGTab('blueprint',this)">Cosmic Blueprint</button>
-          <button class="gtab" onclick="showGTab('supplements',this)">Supplements</button>
+
         </div>
 
         <!-- Practice Cards -->
@@ -621,19 +634,6 @@ body { font-family: var(--sans); background: var(--linen); color: var(--ink); ov
           <div id="placement-list"></div>
         </div>
 
-        <!-- Supplements -->
-        <div id="gsec-supplements" class="gsection">
-          <div class="card"><div class="card-label">Daily stack — check as you take</div><div id="supp-list"></div></div>
-          <div class="card" style="margin-top:14px;">
-            <div class="card-label">Nutrition targets</div>
-            <div class="g2" style="gap:9px;">
-              <div class="savcell"><div class="savcell-lbl">Protein</div><div class="savcell-val">100–130g / day</div></div>
-              <div class="savcell"><div class="savcell-lbl">Net carbs (keto)</div><div class="savcell-val">20–40g</div></div>
-              <div class="savcell"><div class="savcell-lbl">Eating window</div><div class="savcell-val">8–10 hours</div></div>
-              <div class="savcell"><div class="savcell-lbl">Tinned fish</div><div class="savcell-val">3–5× per week</div></div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- ============ CYCLE GUIDE ============ -->
@@ -770,6 +770,17 @@ const S = {
 };
 
 // ============================================================
+//  VERSION MIGRATION GUARD
+//  Bumping APP_VERSION forces a clean reset of structured data.
+//  Journals, rituals, and daily checklist states are preserved.
+// ============================================================
+const APP_VERSION = '3.0';
+if (S.get('appVersion') !== APP_VERSION) {
+  ['goals','debts','finRows','milestones','practiceCards'].forEach(k => S.del(k));
+  S.set('appVersion', APP_VERSION);
+}
+
+// ============================================================
 //  GLOBAL STATE
 // ============================================================
 const today = new Date();
@@ -781,11 +792,25 @@ let debtStrategy = 'snowball';
 let openCardId = null;
 let cardNextId = 50;
 
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h >= 5  && h < 12) return 'Good morning, Katie.';
+  if (h >= 12 && h < 17) return 'Good afternoon, Katie.';
+  if (h >= 17 && h < 21) return 'Good evening, Katie.';
+  return 'Still up, Katie?';
+}
+
+// Set greeting on load
+document.addEventListener('DOMContentLoaded', () => {
+  const el = document.getElementById('view-title');
+  if (el) el.textContent = getGreeting();
+});
+
 // ============================================================
 //  SIDEBAR / VIEW SWITCHING
 // ============================================================
 const VIEW_META = {
-  dashboard: { title:'Good morning, Katie.', sub:'Here\'s where things stand today.', btn1:'New prompt', btn2:null },
+  dashboard: { title:'', sub:'Here\'s where things stand today.', btn1:'New prompt', btn2:null },
   journal:   { title:'Journal', sub:'Your daily practice — no editing, no performance.', btn1:'Save entry', btn2:'New prompt' },
   guide:     { title:'Living Guide', sub:'A map home to yourself.', btn1:'+ New card', btn2:'+ Import text' },
   cycle:     { title:'Cycle Guide', sub:'Cancer Sun · ruled by the Moon · built for navigating transitions.', btn1:null, btn2:null },
@@ -797,6 +822,7 @@ const VIEW_META = {
 function switchView(id, el) {
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if (id==='dashboard') { const t=document.getElementById('view-title'); if(t) t.textContent=getGreeting(); }
   document.getElementById('view-'+id).classList.add('active');
   el.classList.add('active');
   currentView = id;
@@ -862,27 +888,56 @@ function saveJournalEntry() {
   renderJournalEntries();
 }
 
+let editingEntryId = null;
+
 function renderJournalEntries() {
   const list = document.getElementById('journal-entries-list');
-  if (!journalEntries.length) { list.innerHTML=''; return; }
-  list.innerHTML = journalEntries.slice(0,5).map(e=>`
-    <div class="card" style="margin-bottom:10px;">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
+  if (!journalEntries.length) { list.innerHTML='<p style="font-family:var(--lora);font-style:italic;font-size:13px;color:var(--ink-light);">No entries yet — write your first one below.</p>'; return; }
+  list.innerHTML = journalEntries.map(e=>`
+    <div class="card" style="margin-bottom:10px;" id="je-${e.id}">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
         <div style="font-family:var(--serif);font-size:13.5px;color:var(--ink);">${e.date}</div>
-        <div style="font-size:10.5px;color:var(--ink-light);font-family:var(--lora);font-style:italic;">${e.prompt||''}</div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:10.5px;color:var(--ink-light);font-family:var(--lora);font-style:italic;">${e.prompt||''}</span>
+          <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 9px;" onclick="startEditEntry(${e.id})">Edit</button>
+          <button class="remove-btn" onclick="deleteEntry(${e.id})">✕</button>
+        </div>
       </div>
-      <div style="font-family:var(--lora);font-size:13px;color:var(--ink-mid);line-height:1.7;">${e.text.substring(0,300)}${e.text.length>300?'…':''}</div>
+      <div id="je-body-${e.id}" style="font-family:var(--lora);font-size:13px;color:var(--ink-mid);line-height:1.7;">${e.text}</div>
+      <div id="je-edit-${e.id}" style="display:none;margin-top:8px;">
+        <textarea style="width:100%;background:var(--linen);border:1px solid var(--border-med);border-radius:var(--radius-sm);padding:10px 12px;font-family:var(--lora);font-size:13px;color:var(--ink);line-height:1.7;resize:vertical;height:120px;outline:none;" id="je-ta-${e.id}">${e.text}</textarea>
+        <div style="display:flex;gap:7px;margin-top:7px;justify-content:flex-end;">
+          <button class="btn btn-sm" onclick="cancelEditEntry(${e.id})">Cancel</button>
+          <button class="btn btn-primary btn-sm" onclick="saveEditEntry(${e.id})">Save</button>
+        </div>
+      </div>
     </div>`).join('');
+}
+
+function startEditEntry(id) {
+  document.getElementById('je-body-'+id).style.display='none';
+  document.getElementById('je-edit-'+id).style.display='block';
+}
+function cancelEditEntry(id) {
+  document.getElementById('je-body-'+id).style.display='block';
+  document.getElementById('je-edit-'+id).style.display='none';
+}
+function saveEditEntry(id) {
+  const text = document.getElementById('je-ta-'+id).value.trim(); if(!text) return;
+  const e = journalEntries.find(e=>e.id===id); if(!e) return;
+  e.text = text;
+  S.set('journalEntries', journalEntries);
+  renderJournalEntries();
+}
+function deleteEntry(id) {
+  if (!confirm('Delete this entry?')) return;
+  journalEntries = journalEntries.filter(e=>e.id!==id);
+  S.set('journalEntries', journalEntries);
+  renderJournalEntries();
 }
 renderJournalEntries();
 
-// dash journal save on blur
-document.getElementById('dash-journal-ta').addEventListener('blur', function() {
-  const text = this.value.trim(); if (!text) return;
-  journalEntries.unshift({ id:Date.now(), date:new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}), text, prompt:PROMPTS[promptIdx] });
-  S.set('journalEntries', journalEntries.slice(0,60));
-  renderJournalEntries();
-});
+// dash journal textarea - no auto-save on blur to prevent duplicates
 
 // ============================================================
 //  AI HELPERS
@@ -901,6 +956,19 @@ const JOURNAL_SYS = 'You are a gentle, grounded journaling companion integrated 
 const CARD_SYS = 'You are a warm, grounded wellness and life coach companion integrated into a personal living guide app called Earthwork. Answer thoughtfully and concisely — 2 to 4 sentences. No lists, no markdown. Speak like a trusted advisor who knows the user well. The user is Katie — a Cancer Sun, Aquarius Moon, Manifesting Generator.';
 
 function dashAsk() { const q=document.getElementById('dash-ai-input').value.trim(); if(!q)return; callAI(JOURNAL_SYS,q,document.getElementById('dash-ai-resp')); document.getElementById('dash-ai-input').value=''; }
+
+function saveDashJournal() {
+  const ta = document.getElementById('dash-journal-ta');
+  const text = ta.value.trim(); if (!text) return;
+  // prevent duplicate: don't save if same text already exists as most recent entry
+  if (journalEntries.length && journalEntries[0].text === text) { ta.value=''; return; }
+  journalEntries.unshift({ id:Date.now(), date:new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}), text, prompt:PROMPTS[promptIdx] });
+  S.set('journalEntries', journalEntries.slice(0,60));
+  ta.value='';
+  renderJournalEntries();
+  ta.placeholder='Entry saved ✓ — begin writing again anytime…';
+  setTimeout(()=>{ ta.placeholder='Begin writing… this space is just yours.'; }, 3000);
+}
 function journalAsk() { const q=document.getElementById('journal-ai-input').value.trim(); if(!q)return; callAI(JOURNAL_SYS,q,document.getElementById('journal-ai-resp')); document.getElementById('journal-ai-input').value=''; }
 function cardAskAI() { const q=document.getElementById('m-ai-input').value.trim(); if(!q)return; const card=CARDS.find(c=>c.id===openCardId); callAI(CARD_SYS, `Card: "${card?.title}"\nContent: "${card?.body}"\n\nQuestion: ${q}`, document.getElementById('m-ai-resp')); document.getElementById('m-ai-input').value=''; }
 
@@ -917,11 +985,20 @@ let dailyItems = [];
 let activeChecklist = 'morning';
 
 function renderChecklistItem(r, i, listKey) {
-  return `<div class="ritual-item${r.done?' done':''}" onclick="toggleCheckItem('${listKey}',${i})">
-    <div class="rcheck"><div class="rcheck-dot"></div></div>
-    <span class="ritual-name">${r.name}</span>
+  const detail = listKey==='daily' && FLOW[i] ? FLOW[i].detail : '';
+  return `<div class="ritual-item${r.done?' done':''}" style="position:relative;">
+    <div class="rcheck" onclick="toggleCheckItem('${listKey}',${i})"><div class="rcheck-dot"></div></div>
+    <span class="ritual-name" style="flex:1;" onclick="toggleCheckItem('${listKey}',${i})">${r.name}</span>
     <span class="ritual-time">${r.time}</span>
-  </div>`;
+    ${detail ? `<button onclick="event.stopPropagation();showChecklistDetail('${listKey}',${i})" style="background:none;border:none;cursor:pointer;font-size:13px;color:var(--ink-light);padding:0 4px;line-height:1;" title="What does this mean?">?</button>` : ''}
+  </div>
+  ${detail ? `<div id="cd-${listKey}-${i}" style="display:none;margin:0 0 6px 28px;padding:8px 11px;background:var(--linen);border-radius:var(--radius-sm);border-left:2px solid var(--sage);font-family:var(--lora);font-style:italic;font-size:12px;color:var(--ink-mid);line-height:1.6;">${detail}</div>` : ''}`;
+}
+
+function showChecklistDetail(listKey, i) {
+  const el = document.getElementById('cd-'+listKey+'-'+i);
+  if (!el) return;
+  el.style.display = el.style.display==='none' ? 'block' : 'none';
 }
 
 function renderRituals() {
@@ -939,6 +1016,11 @@ function toggleCheckItem(listKey, i) {
   } else {
     dailyItems[i].done=!dailyItems[i].done;
     S.set('dailyItems_'+today.toDateString(), dailyItems);
+    // sync with flow list if it's visible
+    const fc = document.getElementById('fc-'+i);
+    const fb = document.getElementById('fb-'+i);
+    if (fc) { if(dailyItems[i].done) fc.classList.add('on'); else fc.classList.remove('on'); }
+    if (fb) { if(dailyItems[i].done) fb.classList.add('done'); else fb.classList.remove('done'); }
   }
   renderRituals();
 }
@@ -988,60 +1070,98 @@ const GOAL_CATS = {
 
 const DEFAULT_GOALS = [
   {
-    id:1, name:'Find a new job', cat:'career', pct:35,
-    why:'Land a fully remote Director or VP Operations role outside mortgage, with performance bonus and benefits.',
+    id:1, name:'Find a new job', cat:'career', pct:0,
+    why:'Land a fully remote Director or VP Operations role outside mortgage, with performance bonus, health benefits, and senior-level compensation.',
     milestones:[
-      {id:101,text:'Finalize resume and LinkedIn for broader ops roles',done:true},
-      {id:102,text:'Submit 10+ tailored applications',done:true},
-      {id:103,text:'Complete first-round interviews',done:false},
-      {id:104,text:'Receive and evaluate formal offer',done:false},
-      {id:105,text:'Negotiate title, comp, and remote terms',done:false},
-      {id:106,text:'Accept and give notice',done:false},
+      {id:101,text:'Resume: reframe mortgage experience into broader ops leadership language',done:true},
+      {id:102,text:'LinkedIn: update headline, about section, and featured content for ops roles',done:true},
+      {id:103,text:'Build target company list — remote-first, outside mortgage, ops-heavy',done:true},
+      {id:104,text:'Identify 3 role types to apply to (VP Ops, Director Ops, Partner Ops)',done:true},
+      {id:105,text:'Submit first 5 tailored applications',done:true},
+      {id:106,text:'Submit 10+ tailored applications total',done:true},
+      {id:107,text:'Respond to all active recruiter outreach within 48 hours',done:false},
+      {id:108,text:'Complete phone screen / first-round interview',done:false},
+      {id:109,text:'Complete second-round or panel interview',done:false},
+      {id:110,text:'Receive a formal written offer',done:false},
+      {id:111,text:'Run offer through your evaluation framework (title, remote, comp, bonus, benefits)',done:false},
+      {id:112,text:'Negotiate — lead with comp, title, and remote non-negotiables',done:false},
+      {id:113,text:'Accept offer in writing',done:false},
+      {id:114,text:'Give notice professionally — protect relationships',done:false},
+      {id:115,text:'First day at new role',done:false},
     ]
   },
   {
-    id:2, name:'Cascade Notary — RON ready', cat:'notary', pct:25,
-    why:'Complete Washington State notary credentialing and RON endorsement so you can take remote online notarization jobs.',
+    id:2, name:'Cascade Notary — get RON certified', cat:'notary', pct:0,
+    why:'Complete Washington State notary commission and RON endorsement so you can take remote online notarization jobs from anywhere.',
     milestones:[
-      {id:201,text:'Complete WA State notary application',done:true},
-      {id:202,text:'Obtain commission and bond',done:false},
-      {id:203,text:'Complete RON endorsement application',done:false},
-      {id:204,text:'Select and onboard RON platform (Notarize, Notary Hub, etc.)',done:false},
-      {id:205,text:'Complete E&O insurance',done:false},
-      {id:206,text:'Take first paid RON assignment',done:false},
+      {id:201,text:'Confirm WA State notary application has been submitted',done:true},
+      {id:202,text:'Receive notary commission certificate in the mail',done:false},
+      {id:203,text:'Purchase notary bond (required in WA — $10,000 bond, ~$50/year)',done:false},
+      {id:204,text:'File bond with county auditor',done:false},
+      {id:205,text:'Purchase notary E&O insurance (errors & omissions, ~$100-200/year)',done:false},
+      {id:206,text:'Order official notary stamp/seal',done:false},
+      {id:207,text:'Complete RON endorsement application with WA Dept of Licensing',done:false},
+      {id:208,text:'Select RON platform — research Notarize, Nexsys, WetSign, NotaryGadget',done:false},
+      {id:209,text:'Complete identity verification and platform onboarding',done:false},
+      {id:210,text:'Do a test RON session to confirm tech setup works',done:false},
+      {id:211,text:'Create Cascade Notary profile — photo, bio, availability',done:false},
+      {id:212,text:'Take first paid RON assignment',done:false},
+      {id:213,text:'Complete 10 RON sessions and request first reviews',done:false},
     ]
   },
   {
-    id:3, name:'Add LSA services', cat:'notary', pct:5,
-    why:'Layer loan signing agent work on top of notary credentials — higher pay per appointment.',
+    id:3, name:'Add LSA — loan signing agent', cat:'notary', pct:0,
+    why:'Layer loan signing agent work on top of your notary credentials. LSA jobs pay $75–200+ per appointment and are the highest-earning notary work.',
     milestones:[
-      {id:301,text:'Complete NNA LSA certification',done:false},
-      {id:302,text:'Join Snapdocs, Signing Order, and Notary Café',done:false},
-      {id:303,text:'Complete first 5 loan signings',done:false},
-      {id:304,text:'Build signing kit (printer, supplies, bag)',done:false},
-      {id:305,text:'Reach consistent monthly signing income',done:false},
+      {id:301,text:'Research NNA (National Notary Association) LSA certification requirements',done:false},
+      {id:302,text:'Purchase NNA membership and LSA training course',done:false},
+      {id:303,text:'Complete NNA Signing Agent certification exam',done:false},
+      {id:304,text:'Pass NNA background screening (required by most title companies)',done:false},
+      {id:305,text:'Get laser printer — essential for printing loan packages (Brother HL-L2350DW is reliable)',done:false},
+      {id:306,text:'Assemble signing kit: printer, paper, pens, padfolio, binder clips, sticky notes',done:false},
+      {id:307,text:'Create profiles on Snapdocs, Signing Order, Notary Café, and SigningAgent.com',done:false},
+      {id:308,text:'Set your fee schedule — research local market rates first',done:false},
+      {id:309,text:'Complete first loan signing assignment',done:false},
+      {id:310,text:'Complete 5 signings and collect feedback',done:false},
+      {id:311,text:'Reach out directly to 3 local title companies to introduce Cascade Notary',done:false},
+      {id:312,text:'Complete 25 signings — enough to establish a rating and reputation',done:false},
+      {id:313,text:'Hit first $500 month from signing income',done:false},
     ]
   },
   {
     id:4, name:'Form LLC and go fully mobile', cat:'notary', pct:0,
-    why:'Once revenue justifies it, form Cascade Notary & Signing Service LLC and operate as a full mobile notary business.',
+    why:'Once notary and LSA revenue is consistent, formalize Cascade Notary & Signing Service as an LLC and operate as a full mobile business in the Vancouver/Portland metro.',
     milestones:[
-      {id:401,text:'Reach revenue threshold to justify LLC formation',done:false},
-      {id:402,text:'File LLC with Washington Secretary of State',done:false},
-      {id:403,text:'Open business bank account',done:false},
-      {id:404,text:'Set up invoicing and business systems',done:false},
-      {id:405,text:'Launch mobile notary service in Vancouver/Portland metro',done:false},
+      {id:401,text:'Hit $1,000/month consistent notary/LSA revenue (LLC formation trigger)',done:false},
+      {id:402,text:'Choose business name — confirm Cascade Notary & Signing Service is available in WA',done:false},
+      {id:403,text:'File LLC Articles of Organization with WA Secretary of State (~$200)',done:false},
+      {id:404,text:'Get EIN (Employer Identification Number) from IRS — free, online, takes 10 min',done:false},
+      {id:405,text:'Open dedicated business checking account',done:false},
+      {id:406,text:'Set up simple bookkeeping — Wave (free) or QuickBooks Self-Employed',done:false},
+      {id:407,text:'Create invoice template with Cascade Notary branding',done:false},
+      {id:408,text:'Get a dedicated business phone number (Google Voice works)',done:false},
+      {id:409,text:'Build a simple one-page website for Cascade Notary',done:false},
+      {id:410,text:'Update all platform profiles to reflect LLC status',done:false},
+      {id:411,text:'Set mileage tracking system for tax deductions (MileIQ or similar)',done:false},
+      {id:412,text:'Launch mobile notary service — advertise in Vancouver/Portland area',done:false},
+      {id:413,text:'Get first client from mobile outreach (not a platform referral)',done:false},
+      {id:414,text:'Hit $2,500/month — enough to call it a real business',done:false},
     ]
   },
   {
-    id:5, name:'Pay off all debt', cat:'financial', pct:20,
-    why:'Zero out credit card, auto loan, and personal loan using snowball method with extra monthly payments.',
+    id:5, name:'Pay off all debt', cat:'financial', pct:0,
+    why:'Zero out all debt using the snowball method — smallest balance first for momentum, with every freed-up minimum rolled into the next one.',
     milestones:[
-      {id:501,text:'Confirm all balances and interest rates',done:true},
-      {id:502,text:'Pay off credit card A',done:false},
-      {id:503,text:'Pay off personal loan',done:false},
-      {id:504,text:'Pay off auto loan',done:false},
-      {id:505,text:'Celebrate being completely debt-free',done:false},
+      {id:501,text:'Confirm exact current balances and interest rates for all 3 debts',done:true},
+      {id:502,text:'Set a fixed extra monthly payment amount and protect it like a bill',done:false},
+      {id:503,text:'Update debt tracker in Earthwork each time you make a payment',done:false},
+      {id:504,text:'Pay off Credit Card A completely',done:false},
+      {id:505,text:'Roll Credit Card A minimum into Personal Loan payment',done:false},
+      {id:506,text:'Pay off Personal Loan completely',done:false},
+      {id:507,text:'Roll both freed minimums into Auto Loan payment',done:false},
+      {id:508,text:'Pay off Auto Loan completely',done:false},
+      {id:509,text:'Zero debt — redirect all former debt payments to savings',done:false},
+      {id:510,text:'Celebrate properly. This is a big deal.',done:false},
     ]
   },
 ];
@@ -1357,14 +1477,25 @@ function buildFlowList(){
   const list=document.getElementById('flow-list'); if(!list)return;
   list.innerHTML='';
   FLOW.forEach((block,i)=>{
-    const el=document.createElement('div'); el.className='flow-block'; el.id='fb-'+i;
-    el.innerHTML=`<div class="flow-top" onclick="toggleFB(${i})"><div class="fcheck" id="fc-${i}" onclick="event.stopPropagation();markFDone(${i})"><div class="fcheck-dot"></div></div><div class="flow-time">${block.time}</div><div class="flow-name">${block.name}</div><div class="flow-dur">${block.mins} min</div><div class="flow-chev">▾</div></div><div class="flow-detail"><div class="flow-detail-body">${block.detail}</div><div class="timer-row"><div class="timer-display" id="td-${i}">${fmtTime(block.mins*60)}</div><div class="tbar-wrap"><div class="tbar" id="tb-${i}"></div></div><button class="btn btn-primary btn-sm" id="tbtn-${i}" onclick="toggleTimer(${i},${block.mins*60})">Start</button><button class="btn btn-sm" onclick="resetTimer(${i},${block.mins*60})">Reset</button></div></div>`;
+    const isDone = dailyItems[i] ? dailyItems[i].done : false;
+    const el=document.createElement('div');
+    el.className='flow-block'+(isDone?' done':''); el.id='fb-'+i;
+    el.innerHTML=`<div class="flow-top" onclick="toggleFB(${i})"><div class="fcheck${isDone?' on':''}" id="fc-${i}" onclick="event.stopPropagation();markFDone(${i})"><div class="fcheck-dot"></div></div><div class="flow-time">${block.time}</div><div class="flow-name">${block.name}</div><div class="flow-dur">${block.mins} min</div><div class="flow-chev">▾</div></div><div class="flow-detail"><div class="flow-detail-body">${block.detail}</div><div class="timer-row"><div class="timer-display" id="td-${i}">${fmtTime(block.mins*60)}</div><div class="tbar-wrap"><div class="tbar" id="tb-${i}"></div></div><button class="btn btn-primary btn-sm" id="tbtn-${i}" onclick="toggleTimer(${i},${block.mins*60})">Start</button><button class="btn btn-sm" onclick="resetTimer(${i},${block.mins*60})">Reset</button></div></div>`;
     list.appendChild(el);
   });
 }
 
 function toggleFB(i){document.getElementById('fb-'+i).classList.toggle('open');}
-function markFDone(i){document.getElementById('fc-'+i).classList.toggle('on');document.getElementById('fb-'+i).classList.toggle('done');}
+function markFDone(i){
+  document.getElementById('fc-'+i).classList.toggle('on');
+  document.getElementById('fb-'+i).classList.toggle('done');
+  // sync back to dashboard daily checklist
+  if (dailyItems[i] !== undefined) {
+    dailyItems[i].done = document.getElementById('fc-'+i).classList.contains('on');
+    S.set('dailyItems_'+today.toDateString(), dailyItems);
+    renderRituals();
+  }
+}
 
 function toggleTimer(i,total){
   const btn=document.getElementById('tbtn-'+i); const block=document.getElementById('fb-'+i);
@@ -1427,7 +1558,20 @@ buildBlueprint();
 // ============================================================
 const SUPPS=[{name:'Magnesium glycinate',timing:'At night — max dose in late luteal'},{name:'CoQ10',timing:'Daily with breakfast'},{name:'Vitamin D3',timing:'With a fat-containing meal'},{name:'Ashwagandha',timing:'Morning — shift to evening-only in late luteal'},{name:'Choline',timing:'Daily with breakfast — critical in late luteal'},{name:'Fish oil / Omega-3',timing:'Daily — slightly higher in luteal phase'},{name:'B6',timing:'Consider 50mg in late luteal if multivitamin is low'},{name:'Bone broth or collagen',timing:'Daily'},{name:'Electrolytes',timing:'First thing with morning water'}];
 let suppState = S.get('suppState_'+today.toDateString(), {});
-function buildSupps(){const list=document.getElementById('supp-list');if(!list)return;list.innerHTML=SUPPS.map((s,i)=>`<div class="supp-row"><div class="supp-chk${suppState[i]?' on':''}" id="sc-${i}" onclick="toggleSupp(${i})">${suppState[i]?'✓':''}</div><div class="supp-name" style="margin-left:9px;">${s.name}</div><div class="supp-timing">${s.timing}</div></div>`).join('');}
+function buildSupps(){
+  const list=document.getElementById('supp-list'); if(!list)return;
+  list.innerHTML=SUPPS.map((s,i)=>`
+    <div class="supp-row">
+      <div class="supp-chk${suppState[i]?' on':''}" id="sc-${i}" onclick="toggleSupp(${i})">${suppState[i]?'✓':''}</div>
+      <div style="margin-left:9px;flex:1;">
+        <div class="supp-name">${s.name}</div>
+        <div class="supp-timing">${s.timing}</div>
+      </div>
+    </div>`).join('');
+  const done=SUPPS.filter((_,i)=>suppState[i]).length;
+  const prog=document.getElementById('supp-progress');
+  if(prog) prog.textContent=done+' of '+SUPPS.length+' taken';
+}
 function toggleSupp(i){suppState[i]=!suppState[i];S.set('suppState_'+today.toDateString(),suppState);buildSupps();}
 buildSupps();
 
