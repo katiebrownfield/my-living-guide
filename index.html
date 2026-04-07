@@ -356,6 +356,39 @@ body { font-family: var(--sans); background: var(--linen); color: var(--ink); ov
 .remove-btn { font-size: 13px; color: var(--ink-light); background: none; border: none; cursor: pointer; padding: 2px 5px; border-radius: 4px; }
 .remove-btn:hover { background: var(--clay-pale); color: var(--clay); }
 
+
+/* ===================== JOURNAL ===================== */
+.rating-row { display:flex; gap:6px; }
+.rating-btn {
+  width:34px; height:34px; border-radius:50%; border:1.5px solid var(--border-med);
+  background:transparent; font-family:var(--sans); font-size:13px; font-weight:500;
+  color:var(--ink-light); cursor:pointer; transition:all 0.15s; display:flex;
+  align-items:center; justify-content:center;
+}
+.rating-btn:hover { border-color:var(--bark-light); color:var(--ink); background:var(--linen); }
+.rating-btn.active { background:var(--ink); color:var(--linen); border-color:var(--ink); }
+.rating-btn.r1.active { background:var(--clay); border-color:var(--clay); }
+.rating-btn.r2.active { background:#C49A6C; border-color:#C49A6C; }
+.rating-btn.r3.active { background:var(--bark-light); border-color:var(--bark-light); }
+.rating-btn.r4.active { background:var(--sage); border-color:var(--sage); }
+.rating-btn.r5.active { background:#4A7A5A; border-color:#4A7A5A; }
+.entry-card { background:#fff; border-radius:var(--radius); border:1px solid var(--border); padding:18px 20px; margin-bottom:10px; }
+.entry-ratings { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+.entry-rating-pill { font-size:10.5px; font-weight:500; padding:2px 9px; border-radius:99px; background:var(--linen); color:var(--ink-mid); border:1px solid var(--border); }
+.trend-bar-wrap { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.trend-label { font-size:11px; color:var(--ink-light); min-width:70px; font-family:var(--sans); }
+.trend-bar-track { flex:1; height:6px; background:var(--linen-dark); border-radius:99px; overflow:hidden; }
+.trend-bar-fill { height:100%; border-radius:99px; transition:width 0.5s ease; }
+.insight-stat-card { background:var(--linen); border-radius:var(--radius-sm); padding:13px 15px; border:1px solid var(--border); }
+.insight-stat-lbl { font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-light); font-weight:500; margin-bottom:3px; }
+.insight-stat-val { font-family:var(--serif); font-size:22px; color:var(--ink); margin-bottom:2px; }
+.insight-stat-sub { font-size:11px; color:var(--ink-light); font-family:var(--lora); font-style:italic; }
+.phase-avg-row { display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--border); }
+.phase-avg-row:last-child { border-bottom:none; }
+.phase-avg-label { font-size:12px; font-weight:500; color:var(--ink); min-width:90px; }
+.phase-avg-bars { display:flex; gap:6px; flex:1; flex-wrap:wrap; }
+.phase-mini-bar { display:flex; align-items:center; gap:4px; font-size:10.5px; color:var(--ink-light); }
+
 /* modal */
 .modal-overlay { position: fixed; inset: 0; background: rgba(58,48,40,0.44); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 24px; opacity: 0; pointer-events: none; transition: opacity 0.18s; }
 .modal-overlay.open { opacity: 1; pointer-events: all; }
@@ -555,19 +588,124 @@ body { font-family: var(--sans); background: var(--linen); color: var(--ink); ov
 
       <!-- ============ JOURNAL ============ -->
       <div id="view-journal" class="view">
-        <div id="journal-entries-list" style="margin-bottom:20px;"></div>
-        <div class="card">
-          <div class="card-label">New entry</div>
-          <div class="journal-prompt" id="journal-prompt-display">"What felt heavy this week, and what helped lighten it?"</div>
-          <textarea class="journal-ta" id="journal-ta" style="height:160px;" placeholder="Begin writing…"></textarea>
-          <div class="ai-bar">
-            <input class="ai-input" id="journal-ai-input" placeholder="Ask AI for a prompt or reflection…" onkeydown="if(event.key==='Enter')journalAsk()">
-            <button class="btn btn-sm" onclick="cyclePrompt()">New prompt</button>
-            <button class="btn btn-primary btn-sm" onclick="journalAsk()">Ask AI</button>
+        <div class="guide-tabs" id="journal-tabs">
+          <button class="gtab active" onclick="showJTab('write',this)">Write</button>
+          <button class="gtab" onclick="showJTab('entries',this)">Entries</button>
+          <button class="gtab" onclick="showJTab('insights',this)">Insights</button>
+        </div>
+
+        <!-- WRITE TAB -->
+        <div id="jt-write" class="gsection active">
+          <div class="card" style="margin-bottom:14px;">
+            <div class="card-accent" style="background:var(--gold)"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+              <div class="card-label" style="margin-bottom:0;">Today's entry</div>
+              <div style="display:flex;gap:7px;align-items:center;">
+                <span style="font-size:11px;color:var(--ink-light);font-family:var(--lora);font-style:italic;" id="j-date-display"></span>
+                <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="cyclePrompt()">New prompt</button>
+              </div>
+            </div>
+            <div class="journal-prompt" id="journal-prompt-display">"What felt heavy this week, and what helped lighten it?"</div>
+            <textarea class="journal-ta" id="journal-ta" style="height:180px;" placeholder="Begin writing… this space is just yours."></textarea>
+            <div class="ai-bar" style="margin-top:10px;">
+              <input class="ai-input" id="journal-ai-input" placeholder="Ask AI for a prompt or reflection…" onkeydown="if(event.key==='Enter')journalAsk()">
+              <button class="btn btn-primary btn-sm" onclick="journalAsk()">Ask AI</button>
+            </div>
+            <div class="ai-response" id="journal-ai-resp"></div>
           </div>
-          <div class="ai-response" id="journal-ai-resp"></div>
-          <div style="margin-top:12px;text-align:right;">
+
+          <!-- CHECK-IN PANEL -->
+          <div class="card" style="margin-bottom:14px;">
+            <div class="card-accent" style="background:var(--mist)"></div>
+            <div class="card-label">Daily check-in</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+
+              <div>
+                <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-light);font-weight:500;margin-bottom:7px;">Mood</div>
+                <div class="rating-row" id="r-mood" data-key="mood"></div>
+              </div>
+              <div>
+                <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-light);font-weight:500;margin-bottom:7px;">Energy</div>
+                <div class="rating-row" id="r-energy" data-key="energy"></div>
+              </div>
+              <div>
+                <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-light);font-weight:500;margin-bottom:7px;">Sleep quality</div>
+                <div class="rating-row" id="r-sleep" data-key="sleep"></div>
+              </div>
+              <div>
+                <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-light);font-weight:500;margin-bottom:7px;">Brain clarity</div>
+                <div class="rating-row" id="r-clarity" data-key="clarity"></div>
+              </div>
+              <div>
+                <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-light);font-weight:500;margin-bottom:7px;">Anxiety</div>
+                <div class="rating-row" id="r-anxiety" data-key="anxiety"></div>
+              </div>
+              <div>
+                <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-light);font-weight:500;margin-bottom:7px;">Cycle day</div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <input class="field-input" type="number" id="j-cycle-day" min="1" max="35" style="width:64px;text-align:center;" placeholder="—">
+                  <span style="font-size:11px;color:var(--ink-light);font-family:var(--lora);font-style:italic;" id="j-phase-label"></span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-light);font-weight:500;margin-bottom:6px;">Physical symptoms <span style="text-transform:none;letter-spacing:0;font-weight:400;font-family:var(--lora);font-style:italic;">(optional)</span></div>
+              <input class="field-input" id="j-symptoms" style="width:100%;" placeholder="e.g. headache, bloating, poor sleep, cramps, brain fog…">
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;gap:9px;">
+            <button class="btn" onclick="clearJournalForm()">Clear</button>
             <button class="btn btn-primary" onclick="saveJournalEntry()">Save entry</button>
+          </div>
+        </div>
+
+        <!-- ENTRIES TAB -->
+        <div id="jt-entries" class="gsection">
+          <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
+            <input class="field-input" id="j-search" placeholder="Search entries…" style="flex:1;min-width:160px;" oninput="renderJournalEntries()">
+            <select class="field-input" id="j-filter-phase" style="width:auto;" onchange="renderJournalEntries()">
+              <option value="">All phases</option>
+              <option value="Follicular">Follicular</option>
+              <option value="Ovulatory">Ovulatory</option>
+              <option value="Luteal">Luteal</option>
+              <option value="Menstrual">Menstrual</option>
+            </select>
+          </div>
+          <div id="journal-entries-list"></div>
+        </div>
+
+        <!-- INSIGHTS TAB -->
+        <div id="jt-insights" class="gsection">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;" id="insights-stats"></div>
+
+          <div class="card" style="margin-bottom:14px;">
+            <div class="card-accent" style="background:var(--sage)"></div>
+            <div class="card-label" style="margin-bottom:12px;">Trends over time</div>
+            <div id="trends-chart" style="overflow-x:auto;"></div>
+          </div>
+
+          <div class="card" style="margin-bottom:14px;">
+            <div class="card-accent" style="background:var(--mist)"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <div class="card-label" style="margin-bottom:0;">AI insights</div>
+              <div style="display:flex;gap:6px;">
+                <button class="btn btn-sm" onclick="getWeeklyInsight()">This week</button>
+                <button class="btn btn-sm" onclick="getMonthlyInsight()">This month</button>
+              </div>
+            </div>
+            <div style="font-size:11.5px;color:var(--ink-light);font-family:var(--lora);font-style:italic;margin-bottom:12px;">Ask anything about your patterns, or request a weekly or monthly summary above.</div>
+            <div class="ai-bar">
+              <input class="ai-input" id="insights-ai-input" placeholder="e.g. What patterns do you notice in my anxiety? When is my energy highest?" onkeydown="if(event.key==='Enter')getCustomInsight()">
+              <button class="btn btn-primary btn-sm" onclick="getCustomInsight()">Ask</button>
+            </div>
+            <div class="ai-response" id="insights-ai-resp" style="margin-top:10px;"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-accent" style="background:var(--gold)"></div>
+            <div class="card-label" style="margin-bottom:12px;">Cycle phase averages</div>
+            <div id="phase-averages"></div>
           </div>
         </div>
       </div>
@@ -774,7 +912,7 @@ const S = {
 //  Bumping APP_VERSION forces a clean reset of structured data.
 //  Journals, rituals, and daily checklist states are preserved.
 // ============================================================
-const APP_VERSION = '3.0';
+const APP_VERSION = '4.0';
 if (S.get('appVersion') !== APP_VERSION) {
   ['goals','debts','finRows','milestones','practiceCards'].forEach(k => S.del(k));
   S.set('appVersion', APP_VERSION);
@@ -823,6 +961,7 @@ function switchView(id, el) {
   document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   if (id==='dashboard') { const t=document.getElementById('view-title'); if(t) t.textContent=getGreeting(); }
+  if (id==='journal') { syncCycleDayToJournal(); buildRatingRows(); updateJournalDateDisplay(); }
   document.getElementById('view-'+id).classList.add('active');
   el.classList.add('active');
   currentView = id;
@@ -874,70 +1013,361 @@ document.getElementById('journal-prompt-display').textContent = PROMPTS[promptId
 document.getElementById('dash-prompt').textContent = PROMPTS[promptIdx];
 
 // ============================================================
-//  JOURNAL ENTRIES
+//  JOURNAL ENTRIES + CHECK-IN
 // ============================================================
 let journalEntries = S.get('journalEntries', []);
+let currentRatings = { mood:0, energy:0, sleep:0, clarity:0, anxiety:0 };
+
+// Rating buttons
+function buildRatingRows() {
+  ['mood','energy','sleep','clarity','anxiety'].forEach(key => {
+    const el = document.getElementById('r-'+key); if(!el) return;
+    el.innerHTML = [1,2,3,4,5].map(n =>
+      `<button class="rating-btn r${n}${currentRatings[key]===n?' active':''}" onclick="setRating('${key}',${n})">${n}</button>`
+    ).join('');
+  });
+}
+
+function setRating(key, val) {
+  currentRatings[key] = currentRatings[key]===val ? 0 : val;
+  buildRatingRows();
+}
+
+// Auto-pull cycle day from cycle tab
+function syncCycleDayToJournal() {
+  const cycleEl = document.getElementById('cycle-day');
+  const jCycleEl = document.getElementById('j-cycle-day');
+  if (cycleEl && jCycleEl && !jCycleEl.value) {
+    jCycleEl.value = cycleEl.value;
+    updateJournalPhaseLabel(+cycleEl.value);
+  }
+}
+
+function updateJournalPhaseLabel(day) {
+  const el = document.getElementById('j-phase-label'); if(!el) return;
+  let phase = '';
+  if (day>=1&&day<=5) phase='Menstrual';
+  else if (day>=6&&day<=13) phase='Follicular';
+  else if (day>=14&&day<=17) phase='Ovulatory';
+  else if (day>=18) phase = day>=23 ? 'Late Luteal' : 'Early Luteal';
+  el.textContent = phase;
+}
+
+function getCyclePhaseFromDay(day) {
+  if (!day) return '';
+  if (day>=1&&day<=5) return 'Menstrual';
+  if (day>=6&&day<=13) return 'Follicular';
+  if (day>=14&&day<=17) return 'Ovulatory';
+  return day>=23 ? 'Late Luteal' : 'Early Luteal';
+}
 
 function saveJournalEntry() {
   const ta = document.getElementById('journal-ta');
   const text = ta.value.trim(); if (!text) return;
-  const entry = { id: Date.now(), date: new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}), text, prompt: PROMPTS[promptIdx] };
+  const cycleDay = +document.getElementById('j-cycle-day').value || null;
+  const symptoms = document.getElementById('j-symptoms').value.trim();
+  const entry = {
+    id: Date.now(),
+    date: new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),
+    dateObj: new Date().toISOString(),
+    text,
+    prompt: PROMPTS[promptIdx],
+    ratings: {...currentRatings},
+    cycleDay,
+    cyclePhase: getCyclePhaseFromDay(cycleDay),
+    symptoms
+  };
+  if (journalEntries.length && journalEntries[0].text === text) { ta.value=''; return; }
   journalEntries.unshift(entry);
-  S.set('journalEntries', journalEntries.slice(0,60));
-  ta.value='';
+  S.set('journalEntries', journalEntries.slice(0,120));
+  clearJournalForm();
   renderJournalEntries();
+  renderInsights();
+  // switch to entries tab to confirm save
+  const entriesBtn = document.querySelector('#journal-tabs .gtab:nth-child(2)');
+  if (entriesBtn) showJTab('entries', entriesBtn);
 }
 
-let editingEntryId = null;
+function clearJournalForm() {
+  const ta = document.getElementById('journal-ta'); if(ta) ta.value='';
+  const sym = document.getElementById('j-symptoms'); if(sym) sym.value='';
+  currentRatings = { mood:0, energy:0, sleep:0, clarity:0, anxiety:0 };
+  buildRatingRows();
+}
+
+// Set date display
+function updateJournalDateDisplay() {
+  const el = document.getElementById('j-date-display');
+  if (el) el.textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+}
+
+const RATING_LABELS = {
+  mood:    ['','Low','Below avg','Average','Good','Great'],
+  energy:  ['','Depleted','Low','Moderate','Good','High'],
+  sleep:   ['','Very poor','Poor','OK','Good','Excellent'],
+  clarity: ['','Foggy','Unclear','Moderate','Clear','Sharp'],
+  anxiety: ['','Calm','Mild','Moderate','High','Very high'],
+};
+const RATING_COLORS = ['','var(--clay)','#C49A6C','var(--bark-light)','var(--sage)','#4A7A5A'];
+
+function ratingPill(key, val) {
+  if (!val) return '';
+  return `<span class="entry-rating-pill" style="border-color:${RATING_COLORS[val]};color:${RATING_COLORS[val]};">${key}: ${val}/5</span>`;
+}
 
 function renderJournalEntries() {
-  const list = document.getElementById('journal-entries-list');
-  if (!journalEntries.length) { list.innerHTML='<p style="font-family:var(--lora);font-style:italic;font-size:13px;color:var(--ink-light);">No entries yet — write your first one below.</p>'; return; }
-  list.innerHTML = journalEntries.map(e=>`
-    <div class="card" style="margin-bottom:10px;" id="je-${e.id}">
-      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
-        <div style="font-family:var(--serif);font-size:13.5px;color:var(--ink);">${e.date}</div>
-        <div style="display:flex;align-items:center;gap:6px;">
-          <span style="font-size:10.5px;color:var(--ink-light);font-family:var(--lora);font-style:italic;">${e.prompt||''}</span>
+  const list = document.getElementById('journal-entries-list'); if(!list) return;
+  const search = (document.getElementById('j-search')||{}).value||'';;
+  const phaseFilter = (document.getElementById('j-filter-phase')||{}).value||'';;
+
+  let filtered = journalEntries;
+  if (search) filtered = filtered.filter(e => e.text.toLowerCase().includes(search.toLowerCase()) || (e.symptoms||'').toLowerCase().includes(search.toLowerCase()));
+  if (phaseFilter) filtered = filtered.filter(e => (e.cyclePhase||'').includes(phaseFilter));
+
+  if (!filtered.length) {
+    list.innerHTML='<p style="font-family:var(--lora);font-style:italic;font-size:13px;color:var(--ink-light);">' + (journalEntries.length ? 'No entries match your filter.' : 'No entries yet — write your first one.') + '</p>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(e => {
+    const hasRatings = e.ratings && Object.values(e.ratings).some(v=>v>0);
+    const ratingHtml = hasRatings ? `<div class="entry-ratings">${['mood','energy','sleep','clarity','anxiety'].map(k=>ratingPill(k,e.ratings[k])).join('')}</div>` : '';
+    const cycleHtml = e.cycleDay ? `<span class="entry-rating-pill">${e.cyclePhase||'Day '+ e.cycleDay} · Day ${e.cycleDay}</span>` : '';
+    const symptomsHtml = e.symptoms ? `<div style="font-family:var(--lora);font-size:12px;color:var(--ink-light);font-style:italic;margin-top:6px;">Symptoms: ${e.symptoms}</div>` : '';
+    return `<div class="entry-card" id="je-${e.id}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div>
+          <div style="font-family:var(--serif);font-size:14px;color:var(--ink);margin-bottom:3px;">${e.date}</div>
+          ${cycleHtml ? `<div style="margin-top:3px;">${cycleHtml}</div>` : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;margin-left:8px;">
           <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 9px;" onclick="startEditEntry(${e.id})">Edit</button>
           <button class="remove-btn" onclick="deleteEntry(${e.id})">✕</button>
         </div>
       </div>
       <div id="je-body-${e.id}" style="font-family:var(--lora);font-size:13px;color:var(--ink-mid);line-height:1.7;">${e.text}</div>
-      <div id="je-edit-${e.id}" style="display:none;margin-top:8px;">
+      ${ratingHtml}
+      ${symptomsHtml}
+      <div id="je-edit-${e.id}" style="display:none;margin-top:10px;">
         <textarea style="width:100%;background:var(--linen);border:1px solid var(--border-med);border-radius:var(--radius-sm);padding:10px 12px;font-family:var(--lora);font-size:13px;color:var(--ink);line-height:1.7;resize:vertical;height:120px;outline:none;" id="je-ta-${e.id}">${e.text}</textarea>
         <div style="display:flex;gap:7px;margin-top:7px;justify-content:flex-end;">
           <button class="btn btn-sm" onclick="cancelEditEntry(${e.id})">Cancel</button>
           <button class="btn btn-primary btn-sm" onclick="saveEditEntry(${e.id})">Save</button>
         </div>
       </div>
-    </div>`).join('');
+    </div>`;
+  }).join('');
 }
 
-function startEditEntry(id) {
-  document.getElementById('je-body-'+id).style.display='none';
-  document.getElementById('je-edit-'+id).style.display='block';
-}
-function cancelEditEntry(id) {
-  document.getElementById('je-body-'+id).style.display='block';
-  document.getElementById('je-edit-'+id).style.display='none';
-}
+function startEditEntry(id) { document.getElementById('je-body-'+id).style.display='none'; document.getElementById('je-edit-'+id).style.display='block'; }
+function cancelEditEntry(id) { document.getElementById('je-body-'+id).style.display='block'; document.getElementById('je-edit-'+id).style.display='none'; }
 function saveEditEntry(id) {
   const text = document.getElementById('je-ta-'+id).value.trim(); if(!text) return;
   const e = journalEntries.find(e=>e.id===id); if(!e) return;
-  e.text = text;
-  S.set('journalEntries', journalEntries);
-  renderJournalEntries();
+  e.text = text; S.set('journalEntries', journalEntries); renderJournalEntries();
 }
 function deleteEntry(id) {
   if (!confirm('Delete this entry?')) return;
   journalEntries = journalEntries.filter(e=>e.id!==id);
-  S.set('journalEntries', journalEntries);
-  renderJournalEntries();
+  S.set('journalEntries', journalEntries); renderJournalEntries(); renderInsights();
 }
 renderJournalEntries();
 
-// dash journal textarea - no auto-save on blur to prevent duplicates
+// ============================================================
+//  JOURNAL TAB SWITCHING
+// ============================================================
+function showJTab(id, btn) {
+  document.querySelectorAll('#jt-write, #jt-entries, #jt-insights').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('#journal-tabs .gtab').forEach(b=>b.classList.remove('active'));
+  const el = document.getElementById('jt-'+id); if(el) el.classList.add('active');
+  btn.classList.add('active');
+  if (id==='write') { syncCycleDayToJournal(); buildRatingRows(); updateJournalDateDisplay(); }
+  if (id==='entries') renderJournalEntries();
+  if (id==='insights') renderInsights();
+}
+
+// ============================================================
+//  INSIGHTS ENGINE
+// ============================================================
+function getEntriesWithRatings() {
+  return journalEntries.filter(e => e.ratings && Object.values(e.ratings).some(v=>v>0));
+}
+
+function avgRating(entries, key) {
+  const vals = entries.map(e=>e.ratings?.[key]).filter(v=>v>0);
+  if (!vals.length) return null;
+  return (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1);
+}
+
+function renderInsights() {
+  renderInsightStats();
+  renderTrendsChart();
+  renderPhaseAverages();
+}
+
+function renderInsightStats() {
+  const el = document.getElementById('insights-stats'); if(!el) return;
+  const rated = getEntriesWithRatings();
+  const last7 = rated.filter(e => {
+    if (!e.dateObj) return false;
+    return (Date.now() - new Date(e.dateObj)) < 7*24*60*60*1000;
+  });
+  const stats = [
+    { label:'Entries logged', val:journalEntries.length, sub:'total entries' },
+    { label:'Avg mood (all time)', val:avgRating(rated,'mood') ? avgRating(rated,'mood')+'/5' : '—', sub:rated.length+' rated entries' },
+    { label:'Avg energy (all time)', val:avgRating(rated,'energy') ? avgRating(rated,'energy')+'/5' : '—', sub:'all time' },
+    { label:'Avg sleep (all time)', val:avgRating(rated,'sleep') ? avgRating(rated,'sleep')+'/5' : '—', sub:'all time' },
+    { label:'Avg clarity (all time)', val:avgRating(rated,'clarity') ? avgRating(rated,'clarity')+'/5' : '—', sub:'all time' },
+    { label:'Avg anxiety (all time)', val:avgRating(rated,'anxiety') ? avgRating(rated,'anxiety')+'/5' : '—', sub:'lower is better' },
+  ];
+  el.innerHTML = stats.map(s=>`
+    <div class="insight-stat-card">
+      <div class="insight-stat-lbl">${s.label}</div>
+      <div class="insight-stat-val">${s.val}</div>
+      <div class="insight-stat-sub">${s.sub}</div>
+    </div>`).join('');
+}
+
+function renderTrendsChart() {
+  const el = document.getElementById('trends-chart'); if(!el) return;
+  const rated = getEntriesWithRatings().slice(0,30).reverse();
+  if (!rated.length) { el.innerHTML='<p style="font-family:var(--lora);font-style:italic;font-size:13px;color:var(--ink-light);">Log a few entries with ratings to see your trends here.</p>'; return; }
+
+  const keys = ['mood','energy','sleep','clarity','anxiety'];
+  const colors = { mood:'var(--gold)', energy:'var(--sage)', sleep:'var(--mist)', clarity:'var(--plum)', anxiety:'var(--clay)' };
+  const maxW = Math.max(rated.length * 28, 300);
+
+  let html = `<div style="min-width:${maxW}px;">`;
+  keys.forEach(key => {
+    const avg = avgRating(rated, key);
+    if (!avg) return;
+    html += `<div class="trend-bar-wrap">
+      <span class="trend-label">${key} avg ${avg}</span>
+      <div class="trend-bar-track">
+        <div class="trend-bar-fill" style="width:${(avg/5)*100}%;background:${colors[key]};"></div>
+      </div>
+    </div>`;
+  });
+
+  // Sparkline dots per entry
+  html += `<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px;">
+    <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-light);font-weight:500;margin-bottom:8px;">Mood per entry (oldest → newest)</div>
+    <div style="display:flex;gap:4px;align-items:flex-end;height:40px;">
+      ${rated.map(e => {
+        const v = e.ratings?.mood || 0;
+        const h = v ? Math.round((v/5)*36)+4 : 4;
+        const c = v ? RATING_COLORS[v] : 'var(--linen-dark)';
+        return `<div title="${e.date}: ${v||'—'}/5" style="width:14px;height:${h}px;background:${c};border-radius:3px;flex-shrink:0;transition:height 0.3s;"></div>`;
+      }).join('')}
+    </div>
+  </div>`;
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function renderPhaseAverages() {
+  const el = document.getElementById('phase-averages'); if(!el) return;
+  const rated = getEntriesWithRatings();
+  const phases = ['Follicular','Ovulatory','Early Luteal','Late Luteal','Menstrual'];
+  const phaseColors = { 'Follicular':'var(--mist)','Ovulatory':'var(--gold)','Early Luteal':'var(--clay)','Late Luteal':'var(--clay)','Menstrual':'var(--rose)' };
+
+  if (!rated.filter(e=>e.cyclePhase).length) {
+    el.innerHTML='<p style="font-family:var(--lora);font-style:italic;font-size:13px;color:var(--ink-light);">Log entries with cycle days to see phase-correlated patterns here.</p>';
+    return;
+  }
+
+  el.innerHTML = phases.map(phase => {
+    const phaseEntries = rated.filter(e => e.cyclePhase && e.cyclePhase.includes(phase.split(' ')[0]) || e.cyclePhase===phase);
+    if (!phaseEntries.length) return '';
+    const color = phaseColors[phase] || 'var(--bark-light)';
+    return `<div class="phase-avg-row">
+      <span class="phase-avg-label" style="color:${color};">${phase}</span>
+      <div class="phase-avg-bars">
+        ${['mood','energy','clarity','anxiety'].map(k => {
+          const avg = avgRating(phaseEntries, k);
+          return avg ? `<span class="phase-mini-bar"><span style="font-weight:500;color:var(--ink-mid);">${k}:</span><span>${avg}</span></span>` : '';
+        }).join('')}
+        <span style="font-size:10.5px;color:var(--ink-light);">(${phaseEntries.length} entries)</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Build context string for AI insights
+function buildInsightContext() {
+  const rated = getEntriesWithRatings();
+  const recent = journalEntries.slice(0,10);
+  const goals = S.get('goals',[]);
+  const cycleDay = document.getElementById('cycle-day') ? document.getElementById('cycle-day').value : '';
+
+  let ctx = 'User: Katie. Cancer Sun, Aquarius Moon, Manifesting Generator. Currently in a career transition, building Cascade Notary business, managing perimenopause symptoms.\n\n';
+  ctx += 'Current cycle day: ' + (cycleDay || 'unknown') + '\n\n';
+
+  if (rated.length) {
+    ctx += 'Overall averages from ' + rated.length + ' rated journal entries:\n';
+    ['mood','energy','sleep','clarity','anxiety'].forEach(function(k) {
+      const avg = avgRating(rated, k);
+      if (avg) ctx += '  ' + k + ': ' + avg + '/5\n';
+    });
+    ctx += '\n';
+  }
+
+  const phases = ['Follicular','Ovulatory','Early Luteal','Late Luteal','Menstrual'];
+  const phaseData = phases.map(function(phase) {
+    const pe = rated.filter(function(e) { return e.cyclePhase && (e.cyclePhase.indexOf(phase.split(' ')[0]) >= 0 || e.cyclePhase === phase); });
+    if (!pe.length) return null;
+    return phase + ' (' + pe.length + ' entries): mood ' + (avgRating(pe,'mood')||'—') + ', energy ' + (avgRating(pe,'energy')||'—') + ', anxiety ' + (avgRating(pe,'anxiety')||'—');
+  }).filter(Boolean);
+  if (phaseData.length) ctx += 'Phase averages:\n' + phaseData.map(function(p){ return '  '+p; }).join('\n') + '\n\n';
+
+  if (recent.length) {
+    ctx += 'Recent journal entries (most recent first):\n';
+    recent.forEach(function(e) {
+      ctx += '  [' + e.date + (e.cyclePhase ? ' · ' + e.cyclePhase : '') + '] ' + e.text.substring(0,200) + (e.text.length>200?'…':'') + '\n';
+      if (e.ratings && Object.values(e.ratings).some(function(v){return v>0;})) {
+        const r = e.ratings;
+        ctx += '    Ratings: mood ' + (r.mood||'—') + ' energy ' + (r.energy||'—') + ' sleep ' + (r.sleep||'—') + ' clarity ' + (r.clarity||'—') + ' anxiety ' + (r.anxiety||'—') + '\n';
+      }
+      if (e.symptoms) ctx += '    Symptoms: ' + e.symptoms + '\n';
+    });
+    ctx += '\n';
+  }
+
+  if (goals.length) {
+    ctx += 'Current goals:\n';
+    goals.forEach(function(g) {
+      const pct = Math.round(g.milestones.filter(function(m){return m.done;}).length / Math.max(g.milestones.length,1) * 100);
+      ctx += '  ' + g.name + ' (' + g.cat + '): ' + pct + '% complete\n';
+    });
+  }
+
+  return ctx;
+}
+
+const INSIGHTS_SYS = `You are a perceptive, warm personal analyst integrated into a life-tracking app called Earthwork. You have access to the user's journal entries, mood/energy/sleep/clarity/anxiety ratings, cycle phase data, and goal progress. Your job is to surface patterns, correlations, and insights that the user might not notice themselves — especially around cycle-correlated mood and energy shifts, behavioral patterns, and what the data suggests about their wellbeing. Be specific and reference actual data when you can. Keep responses warm, grounded, and practical. 2-5 sentences per insight. No bullet lists unless specifically useful. Speak like a wise, observant friend who happens to be great at noticing patterns.`;
+
+async function getWeeklyInsight() {
+  const resp = document.getElementById('insights-ai-resp');
+  const ctx = buildInsightContext();
+  await callAI(INSIGHTS_SYS, ctx + '\n\nPlease give me a brief weekly insight — what patterns stand out in the last 7 days of data, and what would you encourage me to pay attention to this coming week?', resp);
+}
+
+async function getMonthlyInsight() {
+  const resp = document.getElementById('insights-ai-resp');
+  const ctx = buildInsightContext();
+  await callAI(INSIGHTS_SYS, ctx + '\n\nPlease give me a monthly pattern report. Look at how my ratings and journal themes correlate with my cycle phases. What patterns are emerging? What does the data suggest I should adjust in how I structure my time or support myself?', resp);
+}
+
+async function getCustomInsight() {
+  const input = document.getElementById('insights-ai-input');
+  const q = input.value.trim(); if(!q) return;
+  const resp = document.getElementById('insights-ai-resp');
+  const ctx = buildInsightContext();
+  await callAI(INSIGHTS_SYS, ctx + '\n\nUser question: ' + q, resp);
+  input.value = '';
+}
+
+// dash journal textarea - no auto-save on blur to prevent duplicates - no auto-save on blur to prevent duplicates
 
 // ============================================================
 //  AI HELPERS
@@ -1574,6 +2004,16 @@ function buildSupps(){
 }
 function toggleSupp(i){suppState[i]=!suppState[i];S.set('suppState_'+today.toDateString(),suppState);buildSupps();}
 buildSupps();
+
+// ============================================================
+//  JOURNAL INIT
+// ============================================================
+buildRatingRows();
+updateJournalDateDisplay();
+(function() {
+  const jcd = document.getElementById('j-cycle-day');
+  if (jcd) jcd.addEventListener('input', function() { updateJournalPhaseLabel(+this.value); });
+})();
 
 // ============================================================
 //  DEBT CALCULATOR
