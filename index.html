@@ -552,15 +552,12 @@ body { font-family: var(--sans); background: var(--linen); color: var(--ink); ov
           <!-- Finance snapshot -->
           <div class="card">
             <div class="card-accent" style="background:var(--clay)"></div>
-            <div class="card-label">Finances this month</div>
-            <div class="savgrid">
-              <div class="savcell"><div class="savcell-lbl">Saved</div><div class="savcell-val">$840</div></div>
-              <div class="savcell"><div class="savcell-lbl">Total savings</div><div class="savcell-val">$4,200</div></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <div class="card-label" style="margin-bottom:0;">Finances this month</div>
+              <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:4px 10px;" onclick="switchView('finance',document.querySelector('[data-view=finance]'))">Edit</button>
             </div>
-            <div class="fin-row"><span class="fin-label">Income</span><span class="fin-amount pos">+$5,200</span></div>
-            <div class="fin-row"><span class="fin-label">Fixed expenses</span><span class="fin-amount neg">–$2,840</span></div>
-            <div class="fin-row"><span class="fin-label">Variable</span><span class="fin-amount neg">–$1,120</span></div>
-            <div class="fin-row"><span class="fin-label">Net</span><span class="fin-amount pos">+$1,240</span></div>
+            <div class="savgrid" id="dash-fin-savings"></div>
+            <div id="dash-fin-rows"></div>
           </div>
 
           <!-- Debt snapshot -->
@@ -1737,12 +1734,13 @@ let milestones = S.get('milestones',[
 let mileNextId = Math.max(...milestones.map(m=>m.id),0)+1;
 
 function renderFinance() {
-  const rows = document.getElementById('fin-rows');
-  if(!rows)return;
-  const totalIn = finRows.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
+  const totalIn  = finRows.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
   const totalOut = finRows.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0);
   const net = totalIn - totalOut;
-  rows.innerHTML = finRows.map(r=>`
+
+  // ── Finance TAB rows ──
+  const rows = document.getElementById('fin-rows');
+  if(rows) rows.innerHTML = finRows.map(r=>`
     <div class="fin-row">
       <span class="fin-label">${r.label}</span>
       <div style="display:flex;align-items:center;gap:8px;">
@@ -1750,11 +1748,41 @@ function renderFinance() {
         <button class="remove-btn" onclick="removeFinRow(${r.id})">✕</button>
       </div>
     </div>`).join('') + `<div class="fin-row" style="font-weight:500;"><span class="fin-label">Net</span><span class="fin-amount ${net>=0?'pos':'neg'}">${net>=0?'+':'–'}$${Math.abs(net).toLocaleString()}</span></div>`;
-  // milestones
+
+  // ── Dashboard finance snapshot ──
+  const dashSavings = document.getElementById('dash-fin-savings');
+  if(dashSavings) {
+    const saved = net > 0 ? net : 0;
+    const totalSavings = milestones.reduce((s,m)=>s+(m.saved||0),0);
+    dashSavings.innerHTML = `
+      <div class="savcell"><div class="savcell-lbl">Net this month</div><div class="savcell-val ${net>=0?'pos':'neg'}" style="font-family:var(--serif);font-size:18px;">${net>=0?'+':'–'}$${Math.abs(net).toLocaleString()}</div></div>
+      <div class="savcell"><div class="savcell-lbl">Total income</div><div class="savcell-val" style="font-family:var(--serif);font-size:18px;">$${totalIn.toLocaleString()}</div></div>`;
+  }
+  const dashRows = document.getElementById('dash-fin-rows');
+  if(dashRows) {
+    // show top rows (max 4) + net
+    const preview = finRows.slice(0,4);
+    dashRows.innerHTML = preview.map(r=>`
+      <div class="fin-row">
+        <span class="fin-label">${r.label}</span>
+        <span class="fin-amount ${r.type==='income'?'pos':'neg'}">${r.type==='income'?'+':'–'}$${r.amount.toLocaleString()}</span>
+      </div>`).join('') + `<div class="fin-row" style="font-weight:500;border-top:1px solid var(--border-med);margin-top:4px;padding-top:8px;">
+        <span class="fin-label">Net</span>
+        <span class="fin-amount ${net>=0?'pos':'neg'}">${net>=0?'+':'–'}$${Math.abs(net).toLocaleString()}</span>
+      </div>`;
+  }
+
+  // ── Finance tab: also update saved/total cells if they exist ──
+  const finSaved = document.getElementById('fin-saved');
+  const finTotal = document.getElementById('fin-total');
+  if(finSaved) finSaved.textContent = '$' + (net>0?net:0).toLocaleString();
+  if(finTotal) finTotal.textContent = '$' + milestones.reduce((s,m)=>s+(m.saved||0),0).toLocaleString();
+
+  // ── Savings milestones ──
   const ms = document.getElementById('savings-milestones');
   if(ms) ms.innerHTML = milestones.map(m=>{
-    const pct=Math.min(100,Math.round(m.saved/m.target*100));
-    return `<div class="goal-item"><div class="goal-header"><span class="goal-name" style="font-size:13px;">${m.label}</span><div style="display:flex;align-items:center;gap:8px;"><span class="goal-pct">$${m.saved.toLocaleString()} / $${m.target.toLocaleString()}</span><button class="remove-btn" onclick="removeMilestone(${m.id})">✕</button></div></div><div class="progress-track"><div class="progress-fill" style="width:${pct}%;background:var(--sage)"></div></div></div>`;
+    const pct=Math.min(100,Math.round((m.saved||0)/m.target*100));
+    return `<div class="goal-item"><div class="goal-header"><span class="goal-name" style="font-size:13px;">${m.label}</span><div style="display:flex;align-items:center;gap:8px;"><span class="goal-pct">$${(m.saved||0).toLocaleString()} / $${m.target.toLocaleString()}</span><button class="remove-btn" onclick="removeMilestone(${m.id})">✕</button></div></div><div class="progress-track"><div class="progress-fill" style="width:${pct}%;background:var(--sage)"></div></div></div>`;
   }).join('');
 }
 function addFinRow() {
