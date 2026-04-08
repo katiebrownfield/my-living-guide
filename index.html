@@ -909,9 +909,10 @@ const S = {
 //  Bumping APP_VERSION forces a clean reset of structured data.
 //  Journals, rituals, and daily checklist states are preserved.
 // ============================================================
-const APP_VERSION = '4.0';
+const APP_VERSION = '4.1';
 if (S.get('appVersion') !== APP_VERSION) {
-  ['goals','debts','finRows','milestones','practiceCards'].forEach(k => S.del(k));
+  // 4.1: only clear goals and practiceCards structure — preserve finRows, debts, milestones
+  ['goals','practiceCards'].forEach(k => S.del(k));
   S.set('appVersion', APP_VERSION);
 }
 
