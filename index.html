@@ -1440,7 +1440,7 @@ async function callAI(system, userMsg, respEl) {
   respEl.className = 'ai-response vis';
   respEl.innerHTML = '<span class="ldots"><span>•</span><span>•</span><span>•</span></span>';
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, system, messages:[{role:'user',content:userMsg}] }) });
+    const res = await fetch('https://earthwork-ai.katbrownfield.workers.dev/', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, system, messages:[{role:'user',content:userMsg}] }) });
     const data = await res.json();
     respEl.innerHTML = '✦ ' + (data.content?.[0]?.text || 'Sit with the question — sometimes the answer is already there.');
   } catch(e) { respEl.innerHTML = 'Could not connect right now — try again in a moment.'; }
@@ -1927,7 +1927,7 @@ async function processImport(){
   const text=document.getElementById('import-ta').value.trim(); if(!text)return;
   const st=document.getElementById('import-status'); st.style.display='block'; st.textContent='Reading and organizing into cards…';
   try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'Organize personal living guide text into practice cards. Extract 2–5 themes. Return ONLY a valid JSON array, no markdown fences. Each item: {"cat":"one of [morning,nourishment,movement,mindset,evening,wellness]","catLabel":"display label","title":"evocative title max 6 words","body":"2–4 warm sentences","tags":["2-3 lowercase strings"]}',messages:[{role:'user',content:text}]})});
+    const res=await fetch('https://earthwork-ai.katbrownfield.workers.dev/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'Organize personal living guide text into practice cards. Extract 2–5 themes. Return ONLY a valid JSON array, no markdown fences. Each item: {"cat":"one of [morning,nourishment,movement,mindset,evening,wellness]","catLabel":"display label","title":"evocative title max 6 words","body":"2–4 warm sentences","tags":["2-3 lowercase strings"]}',messages:[{role:'user',content:text}]})});
     const data=await res.json();
     const raw=data.content?.[0]?.text||'[]';
     const newCards=JSON.parse(raw.replace(/```json|```/g,'').trim());
