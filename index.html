@@ -2190,63 +2190,53 @@ function renderAll() {
 }
 
 (async function init() {
-  const loadMsg = document.getElementById('loading-msg');
-  const loadOffline = document.getElementById('loading-offline');
-
-  // Show offline fallback tap option after 3 seconds
-  const offlineTimer = setTimeout(() => {
-    if (loadOffline) loadOffline.style.display = 'block';
-    if (loadMsg) loadMsg.textContent = 'Still connecting…';
-  }, 3000);
-  if (loadOffline) loadOffline.onclick = function() {
-    clearTimeout(offlineTimer);
-    reloadAllData(); renderAll();
-    const ls = document.getElementById('loading-screen');
-    if (ls) ls.style.display = 'none';
-    const t = document.getElementById('view-title');
-    if (t) t.textContent = getGreeting();
-  };
-
-  if (loadMsg) loadMsg.textContent = 'Syncing your data…';
-
-  // Clear ALL cloud-synced keys from localStorage so we always get fresh cloud data
-  CLOUD_KEYS.forEach(k => { try { localStorage.removeItem(k); } catch(e){} });
-
-  // Pull everything fresh from Supabase (5 second timeout)
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
-    const res = await fetch(SUPABASE_URL + '/rest/v1/earthwork_data?select=key,value', {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY },
-      signal: controller.signal
-    });
-    clearTimeout(timeout);
-    const rows = await res.json();
-    if (Array.isArray(rows) && rows.length) {
-      rows.forEach(row => {
-        if (!isLocalOnly(row.key)) {
-          localStorage.setItem(row.key, JSON.stringify(row.value));
-        }
-      });
-    }
-  } catch(e) {
-    // Timed out or offline — fall through and use local data
-    console.log('Supabase sync failed, using local data:', e.message);
-  }
-
-  // Load data into memory and render everything
+  // ── Step 1: Render immediately from local data so app is never blocked ──
   reloadAllData();
   renderAll();
 
-  clearTimeout(offlineTimer);
-
-  // Hide loading screen
+  // Hide loading screen right away
   const ls = document.getElementById('loading-screen');
   if (ls) ls.style.display = 'none';
 
   // Update greeting
   const t = document.getElementById('view-title');
   if (t) t.textContent = getGreeting();
+
+  // ── Step 2: Sync from Supabase in the background ──
+  const banner = document.getElementById('sync-banner');
+  try {
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), 8000);
+    const res = await fetch(SUPABASE_URL + '/rest/v1/earthwork_data?select=key,value', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY },
+      signal: controller.signal
+    });
+    const rows = await res.json();
+    if (Array.isArray(rows) && rows.length) {
+      // Check if cloud data differs from local before re-rendering
+      let changed = false;
+      rows.forEach(row => {
+        if (!isLocalOnly(row.key)) {
+          const existing = localStorage.getItem(row.key);
+          const incoming = JSON.stringify(row.value);
+          if (existing !== incoming) { changed = true; }
+          localStorage.setItem(row.key, incoming);
+        }
+      });
+      if (changed) {
+        reloadAllData();
+        renderAll();
+        if (banner) {
+          banner.style.display = 'flex';
+          banner.textContent = '✓ Synced with latest data';
+          setTimeout(() => { banner.style.display = 'none'; }, 2500);
+        }
+      }
+    }
+  } catch(e) {
+    // Offline or timed out — already showing local data, nothing to do
+    console.log('Background sync skipped:', e.message);
+  }
 })();
 }
 
