@@ -449,15 +449,7 @@ body { font-family: var(--sans); background: var(--linen); color: var(--ink); ov
 </style>
 </head>
 <body>
-<div id="loading-screen" style="position:fixed;inset:0;background:var(--linen);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:14px;">
-  <div style="font-family:var(--serif);font-size:24px;font-weight:400;color:var(--ink);">Earthwork</div>
-  <div id="loading-msg" style="font-family:var(--lora);font-style:italic;font-size:13px;color:var(--ink-light);">Connecting…</div>
-  <div style="width:120px;height:2px;background:var(--linen-dark);border-radius:99px;overflow:hidden;margin-top:4px;">
-    <div id="loading-bar" style="height:100%;background:var(--sage);border-radius:99px;animation:loadbar 1.2s ease-in-out infinite;"></div>
-  </div>
-  <div id="loading-offline" style="display:none;font-size:11.5px;color:var(--bark-light);font-family:var(--sans);margin-top:4px;">Taking longer than usual — tap to load from local data</div>
-</div>
-<style>@keyframes loadbar{0%{width:0%;margin-left:0}50%{width:100%;margin-left:0}100%{width:0%;margin-left:100%}}</style>
+
 <div class="app">
 
   <!-- SIDEBAR -->
@@ -2193,10 +2185,6 @@ function renderAll() {
   // ── Step 1: Render immediately from local data so app is never blocked ──
   reloadAllData();
   renderAll();
-
-  // Hide loading screen right away
-  const ls = document.getElementById('loading-screen');
-  if (ls) ls.style.display = 'none';
 
   // Update greeting
   const t = document.getElementById('view-title');
