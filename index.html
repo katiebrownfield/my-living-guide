@@ -449,6 +449,14 @@ body { font-family: var(--sans); background: var(--linen); color: var(--ink); ov
 </style>
 </head>
 <body>
+<div id="loading-screen" style="position:fixed;inset:0;background:var(--linen);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;gap:14px;">
+  <div style="font-family:var(--serif);font-size:24px;font-weight:400;color:var(--ink);">Earthwork</div>
+  <div style="font-family:var(--lora);font-style:italic;font-size:13px;color:var(--ink-light);">Syncing your data…</div>
+  <div style="width:48px;height:2px;background:var(--linen-dark);border-radius:99px;overflow:hidden;margin-top:4px;">
+    <div id="loading-bar" style="height:100%;background:var(--sage);border-radius:99px;animation:loadbar 1.2s ease-in-out infinite;"></div>
+  </div>
+</div>
+<style>@keyframes loadbar{0%{width:0%;margin-left:0}50%{width:100%;margin-left:0}100%{width:0%;margin-left:100%}}</style>
 <div class="app">
 
   <!-- SIDEBAR -->
@@ -971,25 +979,8 @@ const S = {
 
 // Pull latest data from cloud on load and merge into localStorage
 async function syncFromCloud() {
-  const banner = document.getElementById('sync-banner');
-  if (banner) { banner.style.display='flex'; banner.textContent='Syncing your data…'; }
-  try {
-    const res = await fetch(SUPABASE_URL + '/rest/v1/earthwork_data?select=key,value', {
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
-    });
-    const rows = await res.json();
-    if (!Array.isArray(rows)) throw new Error('bad response');
-    rows.forEach(row => {
-      if (!isLocalOnly(row.key)) {
-        localStorage.setItem(row.key, JSON.stringify(row.value));
-      }
-    });
-    if (banner) { banner.textContent='✓ Synced'; setTimeout(()=>{ banner.style.display='none'; }, 2000); }
-    return true;
-  } catch(e) {
-    if (banner) { banner.textContent='Offline — using local data'; setTimeout(()=>{ banner.style.display='none'; }, 3000); }
-    return false;
-  }
+  // Legacy: kept for compatibility — init() now handles the full sync on load
+  return true;
 }
 
 // ============================================================
@@ -2168,38 +2159,70 @@ function closeDebtEditModalDirect() {
   saveDebts(); renderDashDebt(); renderDebtInputs(); calcDebt();
 
 // ============================================================
-//  CLOUD SYNC INIT — pull latest data then re-render everything
+//  CLOUD SYNC INIT
+//  Always pull from Supabase first, clear stale local data,
+//  then render. This guarantees all devices see the same data.
 // ============================================================
+function reloadAllData() {
+  journalEntries = S.get('journalEntries', []);
+  goals          = S.get('goals', DEFAULT_GOALS);
+  goalNextId     = Math.max(...goals.map(g=>g.id), 0) + 1;
+  milestoneNextId= Math.max(...goals.flatMap(g=>g.milestones.map(m=>m.id)), 0) + 1;
+  finRows        = S.get('finRows', [{id:1,label:'Income',amount:5200,type:'income'},{id:2,label:'Fixed expenses',amount:2840,type:'expense'},{id:3,label:'Variable',amount:1120,type:'expense'}]);
+  finNextId      = Math.max(...finRows.map(r=>r.id), 0) + 1;
+  milestones     = S.get('milestones', [{id:1,label:'1 month emergency fund',target:3000,saved:0},{id:2,label:'3 month emergency fund',target:9000,saved:0}]);
+  mileNextId     = Math.max(...milestones.map(m=>m.id), 0) + 1;
+  debts          = S.get('debts', DEFAULT_DEBTS);
+  debtNextId     = Math.max(...debts.map(d=>d.id), 0) + 1;
+  CARDS          = S.get('practiceCards', CARDS);
+  promptIdx      = S.get('promptIdx', 0);
+}
+
+function renderAll() {
+  renderJournalEntries();
+  renderGoals();
+  renderFinance();
+  renderCards();
+  renderDashDebt();
+  renderDebtInputs();
+  calcDebt();
+  buildRatingRows();
+  document.getElementById('journal-prompt-display').textContent = PROMPTS[promptIdx];
+  document.getElementById('dash-prompt').textContent = PROMPTS[promptIdx];
+}
+
 (async function init() {
-  const synced = await syncFromCloud();
-  if (synced) {
-    // Re-read all data from localStorage (now updated from cloud) and re-render
-    journalEntries = S.get('journalEntries', []);
-    goals          = S.get('goals', DEFAULT_GOALS);
-    goalNextId     = Math.max(...goals.map(g=>g.id), 0) + 1;
-    milestoneNextId= Math.max(...goals.flatMap(g=>g.milestones.map(m=>m.id)), 0) + 1;
-    finRows        = S.get('finRows', [{id:1,label:'Income',amount:5200,type:'income'},{id:2,label:'Fixed expenses',amount:2840,type:'expense'},{id:3,label:'Variable',amount:1120,type:'expense'}]);
-    finNextId      = Math.max(...finRows.map(r=>r.id), 0) + 1;
-    milestones     = S.get('milestones', [{id:1,label:'1 month emergency fund',target:3000,saved:1500},{id:2,label:'3 month emergency fund',target:9000,saved:1500}]);
-    mileNextId     = Math.max(...milestones.map(m=>m.id), 0) + 1;
-    debts          = S.get('debts', DEFAULT_DEBTS);
-    debtNextId     = Math.max(...debts.map(d=>d.id), 0) + 1;
-    CARDS          = S.get('practiceCards', CARDS);
-    promptIdx      = S.get('promptIdx', 0);
+  // Clear ALL cloud-synced keys from localStorage so we always get fresh cloud data
+  CLOUD_KEYS.forEach(k => { try { localStorage.removeItem(k); } catch(e){} });
 
-    // Re-render everything with fresh data
-    renderJournalEntries();
-    renderGoals();
-    renderFinance();
-    renderCards();
-    renderDashDebt();
-    renderDebtInputs();
-    calcDebt();
-
-    // Update prompts
-    document.getElementById('journal-prompt-display').textContent = PROMPTS[promptIdx];
-    document.getElementById('dash-prompt').textContent = PROMPTS[promptIdx];
+  // Pull everything fresh from Supabase
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/earthwork_data?select=key,value', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    const rows = await res.json();
+    if (Array.isArray(rows) && rows.length) {
+      rows.forEach(row => {
+        if (!isLocalOnly(row.key)) {
+          localStorage.setItem(row.key, JSON.stringify(row.value));
+        }
+      });
+    }
+  } catch(e) {
+    // Offline — use whatever is in localStorage already
   }
+
+  // Load data into memory and render everything
+  reloadAllData();
+  renderAll();
+
+  // Hide loading screen
+  const ls = document.getElementById('loading-screen');
+  if (ls) ls.style.display = 'none';
+
+  // Update greeting
+  const t = document.getElementById('view-title');
+  if (t) t.textContent = getGreeting();
 })();
 }
 
