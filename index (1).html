@@ -1,0 +1,2675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Earthwork">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Earthwork — Your Living Guide</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Lora:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ===================== RESET & TOKENS ===================== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --linen: #F7F3EE; --linen-dark: #EDE7DE; --linen-mid: #E8E0D5;
+  --bark: #7C6A56; --bark-light: #A08C78;
+  --sage: #7A8C72; --sage-light: #B4C4AC; --sage-pale: #DDE8D9;
+  --clay: #C07B5A; --clay-pale: #F2E4D8;
+  --mist: #8C9FAA; --mist-pale: #DDE6EA;
+  --ink: #3A3028; --ink-mid: #6B5D50; --ink-light: #9A8E83;
+  --gold: #C9A96E; --gold-pale: #F5EDD9;
+  --plum: #8B7B8B; --plum-pale: #EDE8ED;
+  --rose: #B87A7A; --rose-pale: #F2E4E4;
+  --border: rgba(124,106,86,0.14); --border-med: rgba(124,106,86,0.24);
+  --serif: 'Playfair Display', Georgia, serif;
+  --lora: 'Lora', serif;
+  --sans: 'DM Sans', sans-serif;
+  --radius: 16px; --radius-sm: 10px; --radius-xs: 7px;
+  --shadow-sm: 0 2px 10px rgba(60,48,40,0.07);
+  --shadow-md: 0 5px 20px rgba(60,48,40,0.1);
+}
+html, body { height: 100%; }
+body { font-family: var(--sans); background: var(--linen); color: var(--ink); overflow: hidden; }
+
+/* ===================== APP SHELL ===================== */
+.app { display: grid; grid-template-columns: 230px 1fr; height: 100vh; }
+
+/* ===================== SIDEBAR ===================== */
+.sidebar {
+  background: var(--linen-dark);
+  border-right: 1px solid var(--border-med);
+  display: flex; flex-direction: column;
+  overflow-y: auto; overflow-x: hidden;
+}
+.sidebar-logo { padding: 28px 22px 22px; border-bottom: 1px solid var(--border); }
+.sidebar-logo h1 { font-family: var(--serif); font-size: 20px; font-weight: 400; color: var(--ink); letter-spacing: 0.01em; }
+.sidebar-logo span { font-family: var(--sans); font-size: 10.5px; color: var(--ink-light); letter-spacing: 0.09em; text-transform: uppercase; display: block; margin-top: 3px; }
+.sidebar-date { font-family: var(--lora); font-style: italic; font-size: 12px; color: var(--bark-light); margin-top: 8px; }
+
+.nav-group { padding: 14px 12px 0; }
+.nav-group-label { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.11em; color: var(--ink-light); font-weight: 500; padding: 0 10px; margin-bottom: 4px; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: var(--radius-xs);
+  cursor: pointer; font-size: 13px; color: var(--ink-mid);
+  font-weight: 400; transition: all 0.15s;
+  border: 1px solid transparent; margin-bottom: 2px;
+}
+.nav-item:hover { background: rgba(124,106,86,0.08); color: var(--ink); }
+.nav-item.active { background: var(--linen); color: var(--ink); border-color: var(--border-med); font-weight: 500; }
+.nav-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+.sidebar-footer { margin-top: auto; padding: 18px 22px; border-top: 1px solid var(--border); }
+.sidebar-footer p { font-size: 11px; color: var(--ink-light); line-height: 1.5; font-family: var(--lora); font-style: italic; }
+
+/* ===================== MAIN ===================== */
+.main { display: flex; flex-direction: column; overflow: hidden; }
+.main-header {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  padding: 28px 36px 20px; border-bottom: 1px solid var(--border);
+  flex-shrink: 0; gap: 16px; flex-wrap: wrap;
+}
+.main-header-left h2 { font-family: var(--serif); font-size: 26px; font-weight: 400; color: var(--ink); }
+.main-header-left p { font-family: var(--lora); font-style: italic; font-size: 13px; color: var(--ink-light); margin-top: 3px; }
+.main-header-actions { display: flex; gap: 8px; align-items: center; }
+
+.main-content { flex: 1; overflow-y: auto; padding: 28px 36px 48px; }
+
+/* ===================== VIEWS ===================== */
+.view { display: none; animation: fadeIn 0.22s ease; }
+.view.active { display: block; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:none; } }
+
+/* ===================== BUTTONS ===================== */
+.btn {
+  padding: 8px 16px; border-radius: var(--radius-sm);
+  font-family: var(--sans); font-size: 12.5px; font-weight: 500;
+  cursor: pointer; border: 1px solid var(--border-med);
+  background: var(--linen); color: var(--ink-mid); transition: all 0.15s;
+}
+.btn:hover { background: var(--linen-dark); color: var(--ink); }
+.btn-primary { background: var(--ink); color: var(--linen); border-color: var(--ink); }
+.btn-primary:hover { background: var(--ink-mid); }
+.btn-sm { padding: 6px 13px; font-size: 12px; }
+.btn-ghost { background: transparent; border-color: transparent; color: var(--ink-light); }
+.btn-ghost:hover { background: var(--linen-dark); color: var(--ink); border-color: var(--border); }
+
+/* ===================== CARDS ===================== */
+.card { background: #fff; border-radius: var(--radius); border: 1px solid var(--border); padding: 20px 22px; }
+.card + .card { margin-top: 14px; }
+.card-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.09em; font-weight: 500; color: var(--ink-light); margin-bottom: 14px; }
+.card-title { font-family: var(--serif); font-size: 16px; font-weight: 400; color: var(--ink); margin-bottom: 8px; }
+.card-body { font-family: var(--lora); font-size: 13px; color: var(--ink-mid); line-height: 1.72; }
+.card-accent { height: 3px; border-radius: var(--radius) var(--radius) 0 0; margin: -20px -22px 16px; }
+
+/* ===================== GRID HELPERS ===================== */
+.g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.g3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+.g-wide { grid-column: span 2; }
+.g-full { grid-column: span 3; }
+
+/* ===================== PROGRESS ===================== */
+.progress-track { height: 5px; background: var(--linen-dark); border-radius: 99px; overflow: hidden; }
+.progress-fill { height: 100%; border-radius: 99px; transition: width 0.5s ease; }
+
+/* ===================== TAGS / PILLS ===================== */
+.pill { font-size: 10.5px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 10px; border-radius: 99px; display: inline-block; }
+.tag { font-size: 10px; padding: 2px 8px; border-radius: 99px; background: var(--linen); color: var(--ink-light); border: 1px solid var(--border); }
+
+/* ===================== CHIP FILTERS ===================== */
+.chip-row { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; margin-bottom: 18px; }
+.chip-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.09em; color: var(--ink-light); font-weight: 500; margin-right: 3px; }
+.chip { padding: 5px 13px; border-radius: 99px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--border-med); background: transparent; color: var(--ink-light); transition: all 0.15s; font-family: var(--sans); }
+.chip:hover { background: var(--linen-dark); color: var(--ink); }
+.chip.on { background: var(--ink); color: var(--linen); border-color: var(--ink); }
+.chip.sage.on { background: var(--sage); border-color: var(--sage); color:#fff; }
+.chip.clay.on { background: var(--clay); border-color: var(--clay); color:#fff; }
+.chip.gold.on { background: var(--gold); border-color: var(--gold); color:#fff; }
+.chip.mist.on { background: var(--mist); border-color: var(--mist); color:#fff; }
+.chip.plum.on { background: var(--plum); border-color: var(--plum); color:#fff; }
+.chip.bark.on { background: var(--bark); border-color: var(--bark); color:#fff; }
+
+/* ===================== DASHBOARD ===================== */
+.dashboard-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; }
+
+/* ===================== PHASE BANNER ===================== */
+.phase-banner {
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 20px 22px;
+  margin-bottom: 0;
+  position: relative;
+  overflow: hidden;
+}
+.phase-banner-accent { height: 3px; border-radius: var(--radius) var(--radius) 0 0; margin: -20px -22px 16px; }
+.phase-banner-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+.phase-banner-title { font-family: var(--serif); font-size: 18px; font-weight: 400; color: var(--ink); line-height: 1.2; }
+.phase-banner-subtitle { font-family: var(--lora); font-style: italic; font-size: 12px; color: var(--ink-light); margin-top: 3px; }
+.phase-banner-pill { font-size: 10px; font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase; padding: 4px 12px; border-radius: 99px; white-space: nowrap; flex-shrink: 0; }
+.phase-banner-body { font-family: var(--lora); font-size: 13px; color: var(--ink-mid); line-height: 1.7; margin-bottom: 12px; }
+.phase-banner-bullets { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.phase-banner-bullet { display: flex; gap: 8px; font-family: var(--lora); font-size: 12.5px; color: var(--ink-mid); line-height: 1.55; }
+.phase-banner-bullet-dot { color: var(--bark-light); flex-shrink: 0; margin-top: 1px; }
+.phase-banner-chart { background: var(--gold-pale); border-left: 2px solid var(--gold); border-radius: 0 7px 7px 0; padding: 9px 12px; font-family: var(--lora); font-style: italic; font-size: 12px; color: var(--bark); line-height: 1.6; }
+.phase-banner-chart-lbl { font-family: var(--sans); font-style: normal; font-size: 9px; text-transform: uppercase; letter-spacing: 0.09em; font-weight: 500; color: var(--bark-light); margin-bottom: 3px; }
+.husband-note { background: var(--plum-pale); border-left: 2px solid var(--plum); border-radius: 0 7px 7px 0; padding: 9px 12px; font-family: var(--lora); font-style: italic; font-size: 12px; color: var(--plum); line-height: 1.6; margin-top: 8px; }
+.husband-note-lbl { font-family: var(--sans); font-style: normal; font-size: 9px; text-transform: uppercase; letter-spacing: 0.09em; font-weight: 500; color: var(--plum); margin-bottom: 3px; }
+
+/* ===================== WEEKLY RHYTHM CARD ===================== */
+.rhythm-card { background: #fff; border-radius: var(--radius); border: 1px solid var(--border); padding: 20px 22px; }
+.rhythm-phase-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+.rhythm-phase-chip { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; padding: 3px 10px; border-radius: 99px; }
+.rhythm-task-block { margin-bottom: 10px; }
+.rhythm-task-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; color: var(--ink-light); margin-bottom: 4px; }
+.rhythm-task-items { display: flex; flex-direction: column; gap: 4px; }
+.rhythm-task-item { display: flex; gap: 7px; font-family: var(--lora); font-size: 12.5px; color: var(--ink-mid); line-height: 1.5; }
+.rhythm-task-dot { color: var(--bark-light); flex-shrink: 0; }
+.rhythm-divider { border: none; border-top: 1px solid var(--border); margin: 10px 0; }
+.rhythm-caution { background: var(--clay-pale); border-left: 2px solid var(--clay); border-radius: 0 7px 7px 0; padding: 8px 11px; font-family: var(--lora); font-style: italic; font-size: 12px; color: var(--clay); line-height: 1.55; }
+
+/* ===================== ROTATING PRACTICE CARD ===================== */
+.daily-card-wrapper { background: #fff; border-radius: var(--radius); border: 1px solid var(--border); padding: 20px 22px; }
+.daily-card-meta { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.daily-card-prompt { background: var(--sage-pale); border-left: 2px solid var(--sage); border-radius: 0 7px 7px 0; padding: 10px 13px; font-family: var(--lora); font-style: italic; font-size: 13px; color: var(--ink-mid); line-height: 1.65; margin-bottom: 10px; }
+.daily-card-reflection { font-family: var(--lora); font-size: 12.5px; color: var(--ink-mid); line-height: 1.7; }
+.daily-card-title { font-family: var(--serif); font-size: 15px; font-weight: 400; color: var(--ink); margin-bottom: 6px; }
+
+/* journal */
+.journal-prompt { background: var(--gold-pale); border-radius: var(--radius-sm); padding: 11px 13px; font-family: var(--lora); font-style: italic; font-size: 13px; color: var(--bark); line-height: 1.6; margin-bottom: 11px; border-left: 2px solid var(--gold); }
+.journal-ta { width: 100%; background: var(--linen); border: 1px solid var(--border-med); border-radius: var(--radius-sm); padding: 11px 13px; font-family: var(--lora); font-size: 13.5px; color: var(--ink); line-height: 1.7; resize: none; height: 90px; outline: none; transition: border-color 0.15s; }
+.journal-ta:focus { border-color: var(--bark-light); }
+.journal-ta::placeholder { color: var(--ink-light); font-style: italic; }
+.ai-bar { display: flex; gap: 8px; margin-top: 11px; }
+.ai-input { flex: 1; background: var(--linen); border: 1px solid var(--border-med); border-radius: var(--radius-sm); padding: 8px 12px; font-family: var(--sans); font-size: 13px; color: var(--ink); outline: none; transition: border-color 0.15s; }
+.ai-input:focus { border-color: var(--bark-light); }
+.ai-input::placeholder { color: var(--ink-light); }
+.ai-response { margin-top: 9px; padding: 10px 13px; background: var(--sage-pale); border-left: 2px solid var(--sage); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-family: var(--lora); font-style: italic; font-size: 13px; color: var(--ink-mid); line-height: 1.6; display: none; }
+.ai-response.vis { display: block; }
+
+/* ritual checklist */
+.ritual-item { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); cursor: pointer; }
+.ritual-item:last-child { border-bottom: none; }
+.rcheck { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--border-med); flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.ritual-item.done .rcheck { background: var(--sage); border-color: var(--sage); }
+.rcheck-dot { width: 6px; height: 6px; border-radius: 50%; background: #fff; opacity: 0; transition: opacity 0.15s; }
+.ritual-item.done .rcheck-dot { opacity: 1; }
+.ritual-name { font-size: 13px; color: var(--ink-mid); flex: 1; transition: all 0.15s; }
+.ritual-item.done .ritual-name { color: var(--ink-light); text-decoration: line-through; text-decoration-color: var(--sage-light); }
+.ritual-time { font-size: 11px; color: var(--ink-light); }
+
+/* goal items */
+.goal-item { margin-bottom: 13px; }
+.goal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+.goal-name { font-size: 13px; font-weight: 500; color: var(--ink); }
+.goal-pct { font-size: 12px; color: var(--ink-light); font-variant-numeric: tabular-nums; }
+.goal-tag { font-size: 9.5px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; padding: 2px 7px; border-radius: 20px; margin-left: 6px; }
+.tag-career { background: var(--mist-pale); color: var(--mist); }
+.tag-personal { background: var(--sage-pale); color: var(--sage); }
+.tag-project { background: var(--clay-pale); color: var(--clay); }
+
+/* finance rows */
+.fin-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+.fin-row:last-child { border-bottom: none; }
+.fin-label { color: var(--ink-mid); }
+.fin-amount { font-variant-numeric: tabular-nums; font-weight: 500; }
+.pos { color: var(--sage); } .neg { color: var(--clay); }
+.big-num { font-family: var(--serif); font-size: 28px; color: var(--ink); line-height: 1; margin-bottom: 3px; }
+.big-lbl { font-size: 10.5px; color: var(--ink-light); text-transform: uppercase; letter-spacing: 0.07em; }
+
+/* savings cells */
+.savgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 13px; }
+.savcell { background: var(--linen); border-radius: var(--radius-sm); padding: 11px 13px; border: 1px solid var(--border); }
+.savcell-lbl { font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-light); font-weight: 500; margin-bottom: 3px; }
+.savcell-val { font-family: var(--serif); font-size: 18px; color: var(--ink); }
+
+/* debt bars */
+.debt-item { margin-bottom: 13px; }
+.debt-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.debt-name { font-size: 13px; font-weight: 500; color: var(--ink); }
+.debt-amount { font-size: 11.5px; color: var(--ink-light); font-variant-numeric: tabular-nums; }
+.debt-track { height: 7px; background: var(--linen-dark); border-radius: 99px; overflow: hidden; }
+.debt-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--sage), var(--sage-light)); }
+
+/* ===================== LIVING GUIDE TABS ===================== */
+.guide-tabs { display: flex; gap: 3px; margin-bottom: 22px; border-bottom: 1px solid var(--border-med); }
+.gtab { padding: 9px 16px; font-family: var(--sans); font-size: 12.5px; font-weight: 500; color: var(--ink-light); background: transparent; border: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; white-space: nowrap; }
+.gtab:hover { color: var(--ink); }
+.gtab.active { color: var(--ink); border-bottom-color: var(--bark); }
+.gsection { display: none; animation: fadeIn 0.2s ease; }
+.gsection.active { display: block; }
+
+/* flip cards */
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; }
+.flip-wrap { height: 214px; perspective: 1000px; cursor: pointer; }
+.flip-inner { position: relative; width: 100%; height: 100%; transition: transform 0.48s cubic-bezier(0.4,0.2,0.2,1); transform-style: preserve-3d; }
+.flip-wrap.flipped .flip-inner { transform: rotateY(180deg); }
+.flip-front, .flip-back { position: absolute; inset: 0; border-radius: var(--radius); border: 1px solid var(--border); backface-visibility: hidden; -webkit-backface-visibility: hidden; overflow: hidden; }
+.flip-front { background: #fff; display: flex; flex-direction: column; padding: 18px 20px; }
+.flip-back { background: #fff; transform: rotateY(180deg); padding: 18px 20px; display: flex; flex-direction: column; justify-content: space-between; }
+.cat-pill { display: inline-flex; font-size: 10px; font-weight: 500; letter-spacing: 0.07em; text-transform: uppercase; padding: 2px 9px; border-radius: 99px; margin-bottom: 10px; align-self: flex-start; }
+.cat-morning { background: var(--gold-pale); color: var(--bark); }
+.cat-nourishment { background: var(--sage-pale); color: var(--sage); }
+.cat-movement { background: var(--clay-pale); color: var(--clay); }
+.cat-mindset { background: var(--mist-pale); color: var(--mist); }
+.cat-evening { background: var(--plum-pale); color: var(--plum); }
+.cat-wellness { background: var(--linen-dark); color: var(--bark-light); }
+.card-front-title { font-family: var(--serif); font-size: 16px; font-weight: 400; color: var(--ink); line-height: 1.3; flex: 1; }
+.card-front-preview { font-family: var(--lora); font-size: 12px; color: var(--ink-light); font-style: italic; line-height: 1.6; margin-top: 9px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.card-front-hint { font-size: 10.5px; color: var(--ink-light); margin-top: 9px; }
+.card-back-body { font-family: var(--lora); font-size: 12.5px; color: var(--ink-mid); line-height: 1.7; flex: 1; overflow-y: auto; }
+.card-back-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 10px; }
+.add-card { height: 214px; background: transparent; border: 1.5px dashed var(--border-med); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; color: var(--ink-light); font-size: 13px; gap: 8px; font-family: var(--sans); }
+.add-card:hover { background: rgba(124,106,86,0.04); border-color: var(--bark-light); color: var(--bark); }
+
+/* import panel */
+.import-panel { background: #fff; border: 1.5px dashed var(--border-med); border-radius: var(--radius); padding: 18px 20px; margin-bottom: 18px; }
+.import-panel.hidden { display: none; }
+.import-ta { width: 100%; min-height: 90px; background: var(--linen); border: 1px solid var(--border-med); border-radius: var(--radius-sm); padding: 11px 13px; font-family: var(--lora); font-size: 13.5px; color: var(--ink); line-height: 1.7; resize: vertical; outline: none; }
+.import-ta:focus { border-color: var(--bark-light); }
+.import-ta::placeholder { color: var(--ink-light); font-style: italic; }
+.import-actions { display: flex; gap: 9px; margin-top: 10px; align-items: center; }
+.import-status { margin-top: 8px; font-size: 12.5px; color: var(--sage); font-family: var(--lora); font-style: italic; display: none; }
+
+/* daily flow */
+.flow-block { background: #fff; border-radius: var(--radius); border: 1px solid var(--border); margin-bottom: 8px; overflow: hidden; transition: box-shadow 0.2s; }
+.flow-block:hover { box-shadow: var(--shadow-sm); }
+.flow-block.running { border-color: var(--sage-light); box-shadow: 0 0 0 2px var(--sage-pale); }
+.flow-block.done { opacity: 0.5; }
+.flow-top { display: flex; align-items: center; gap: 11px; padding: 11px 15px; cursor: pointer; }
+.flow-time { font-size: 11px; font-weight: 500; color: var(--bark-light); background: var(--linen); border-radius: 99px; padding: 3px 9px; border: 1px solid var(--border); white-space: nowrap; min-width: 106px; text-align: center; flex-shrink: 0; }
+.flow-name { font-size: 13px; font-weight: 500; color: var(--ink); flex: 1; }
+.flow-dur { font-size: 11.5px; color: var(--ink-light); }
+.flow-chev { font-size: 11px; color: var(--ink-light); transition: transform 0.2s; }
+.flow-block.open .flow-chev { transform: rotate(180deg); }
+.flow-detail { display: none; padding: 0 15px 13px 136px; }
+.flow-block.open .flow-detail { display: block; }
+.flow-detail-body { font-family: var(--lora); font-size: 12.5px; color: var(--ink-mid); line-height: 1.7; margin-bottom: 11px; }
+.timer-row { display: flex; align-items: center; gap: 9px; }
+.timer-display { font-family: var(--serif); font-size: 24px; color: var(--ink); min-width: 68px; font-variant-numeric: tabular-nums; }
+.tbar-wrap { flex: 1; height: 4px; background: var(--linen-dark); border-radius: 99px; overflow: hidden; }
+.tbar { height: 100%; background: var(--sage); border-radius: 99px; transition: width 1s linear; width: 0%; }
+.fcheck { width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--border-med); display: flex; align-items: center; justify-content: center; flex-shrink: 0; cursor: pointer; transition: all 0.15s; }
+.fcheck.on { background: var(--sage); border-color: var(--sage); }
+.fcheck-dot { width: 6px; height: 6px; border-radius: 50%; background: #fff; opacity: 0; transition: opacity 0.15s; }
+.fcheck.on .fcheck-dot { opacity: 1; }
+
+/* cycle guide */
+.cycle-day-row { display: flex; align-items: center; gap: 12px; background: var(--linen-dark); border-radius: var(--radius-sm); padding: 11px 15px; margin-bottom: 18px; }
+.cycle-day-input { width: 56px; background: #fff; border: 1px solid var(--border-med); border-radius: 7px; padding: 5px 9px; font-family: var(--sans); font-size: 14px; font-weight: 500; color: var(--ink); text-align: center; outline: none; }
+.phase-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.phase-card { background: #fff; border-radius: var(--radius); border: 1px solid var(--border); padding: 15px 17px; cursor: pointer; transition: all 0.18s; }
+.phase-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
+.phase-tag { display: inline-block; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.09em; font-weight: 500; padding: 2px 9px; border-radius: 99px; margin-bottom: 7px; }
+.phase-title { font-family: var(--serif); font-size: 14px; font-weight: 400; color: var(--ink); margin-bottom: 2px; }
+.phase-sub { font-size: 11px; color: var(--ink-light); margin-bottom: 7px; }
+.phase-body { display: none; font-family: var(--lora); font-size: 12.5px; color: var(--ink-mid); line-height: 1.65; }
+.phase-card.open .phase-body { display: block; }
+.pbullet { display: flex; gap: 7px; margin-bottom: 5px; line-height: 1.5; }
+.pbdot { color: var(--bark-light); flex-shrink: 0; }
+.chart-note { background: var(--gold-pale); border-left: 2px solid var(--gold); border-radius: 0 7px 7px 0; padding: 9px 12px; margin-top: 10px; font-family: var(--lora); font-style: italic; font-size: 12px; color: var(--bark); line-height: 1.6; }
+.chart-note-lbl { font-family: var(--sans); font-style: normal; font-size: 9px; text-transform: uppercase; letter-spacing: 0.09em; font-weight: 500; color: var(--bark-light); margin-bottom: 3px; }
+.pf .phase-tag { background: var(--mist-pale); color: var(--mist); }
+.po .phase-tag { background: var(--gold-pale); color: var(--bark); }
+.pl .phase-tag { background: var(--clay-pale); color: var(--clay); }
+.pm .phase-tag { background: var(--rose-pale); color: var(--rose); }
+/* power-window highlight for late luteal + menstrual */
+.pm, .phase-card.power-window { border-color: rgba(184,122,122,0.3); }
+.power-badge { display: inline-block; font-size: 9px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; padding: 2px 7px; border-radius: 99px; background: var(--rose-pale); color: var(--rose); margin-left: 6px; vertical-align: middle; }
+
+/* blueprint */
+.hd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; margin-bottom: 16px; }
+.hd-card { background: var(--linen-dark); border-radius: var(--radius-sm); padding: 12px 14px; }
+.hd-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 500; color: var(--ink-light); margin-bottom: 2px; }
+.hd-value { font-family: var(--serif); font-size: 14px; color: var(--ink); margin-bottom: 3px; }
+.hd-note { font-family: var(--lora); font-style: italic; font-size: 11.5px; color: var(--ink-mid); line-height: 1.55; }
+.placement-card { background: #fff; border-radius: var(--radius); border: 1px solid var(--border); padding: 13px 15px; margin-bottom: 8px; }
+.placement-hdr { display: flex; align-items: center; gap: 9px; cursor: pointer; }
+.planet-pill { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.07em; padding: 2px 9px; border-radius: 99px; flex-shrink: 0; }
+.placement-title { font-family: var(--serif); font-size: 14px; font-weight: 400; color: var(--ink); flex: 1; }
+.placement-body { display: none; font-family: var(--lora); font-size: 12.5px; color: var(--ink-mid); line-height: 1.7; margin-top: 9px; }
+.placement-card.open .placement-body { display: block; }
+.p-can { background: var(--mist-pale); color: var(--mist); }
+.p-aqu { background: var(--sage-pale); color: var(--sage); }
+.p-leo { background: var(--gold-pale); color: var(--bark); }
+.p-cap { background: var(--linen-dark); color: var(--bark-light); }
+.p-pis { background: var(--plum-pale); color: var(--plum); }
+.p-sag { background: var(--clay-pale); color: var(--clay); }
+.p-sco { background: var(--rose-pale); color: var(--rose); }
+
+/* anchors */
+.anchor-row { display: flex; gap: 13px; padding: 11px 0; border-bottom: 1px solid var(--border); align-items: flex-start; }
+.anchor-row:last-child { border-bottom: none; }
+.anchor-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+.anchor-name { font-size: 12.5px; font-weight: 500; color: var(--ink); min-width: 170px; flex-shrink: 0; }
+.anchor-why { font-family: var(--lora); font-size: 12px; color: var(--ink-mid); line-height: 1.6; }
+
+/* supplements */
+.supp-row { display: flex; align-items: center; gap: 11px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+.supp-row:last-child { border-bottom: none; }
+.supp-chk { width: 17px; height: 17px; border-radius: 4px; border: 1.5px solid var(--border-med); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s; flex-shrink: 0; font-size: 10px; color: #fff; }
+.supp-chk.on { background: var(--sage); border-color: var(--sage); }
+.supp-name { font-size: 13px; font-weight: 500; color: var(--ink); flex: 1; }
+.supp-timing { font-size: 11px; color: var(--ink-light); text-align: right; }
+
+/* debt calculator */
+.debt-calc-grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 16px; align-items: start; }
+.debt-input-row { background: var(--linen); border-radius: var(--radius-sm); border: 1px solid var(--border-med); padding: 11px 13px; margin-bottom: 9px; }
+.debt-input-name-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 9px; }
+.debt-input-name { font-family: var(--sans); font-size: 13px; font-weight: 500; color: var(--ink); background: transparent; border: none; outline: none; flex: 1; }
+.debt-fields { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 7px; }
+.field-group label { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-light); font-weight: 500; display: block; margin-bottom: 3px; }
+.field-input { width: 100%; background: #fff; border: 1px solid var(--border-med); border-radius: 7px; padding: 6px 9px; font-family: var(--sans); font-size: 12.5px; color: var(--ink); outline: none; }
+.field-input:focus { border-color: var(--bark-light); }
+.add-debt-btn { width: 100%; padding: 8px; background: transparent; border: 1.5px dashed var(--border-med); border-radius: var(--radius-sm); font-family: var(--sans); font-size: 12.5px; color: var(--ink-light); cursor: pointer; transition: all 0.15s; }
+.add-debt-btn:hover { background: var(--linen-dark); color: var(--ink); border-color: var(--bark-light); }
+.extra-row { margin: 14px 0; padding: 13px 15px; background: var(--gold-pale); border-radius: var(--radius-sm); border: 1px solid rgba(201,169,110,0.28); }
+.extra-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--bark); font-weight: 500; margin-bottom: 7px; }
+.extra-controls { display: flex; align-items: center; gap: 10px; }
+.extra-controls input[type=range] { flex: 1; accent-color: var(--bark); }
+.extra-amount { font-family: var(--serif); font-size: 18px; color: var(--ink); text-align: center; margin-top: 5px; }
+.strategy-row { display: flex; gap: 7px; margin-bottom: 14px; }
+.strat-btn { flex: 1; padding: 9px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border-med); background: transparent; font-family: var(--sans); font-size: 12px; font-weight: 500; color: var(--ink-mid); cursor: pointer; transition: all 0.15s; text-align: center; }
+.strat-btn:hover { background: var(--linen-dark); }
+.strat-btn.active { background: var(--ink); color: var(--linen); border-color: var(--ink); }
+.strat-desc { font-family: var(--lora); font-style: italic; font-size: 12px; color: var(--ink-light); margin-bottom: 14px; padding: 9px 11px; background: var(--linen); border-radius: var(--radius-sm); line-height: 1.55; }
+.summary-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 9px; margin-bottom: 16px; }
+.sum-cell { background: var(--linen); border-radius: var(--radius-sm); padding: 11px 13px; border: 1px solid var(--border); text-align: center; }
+.sum-cell.hi { background: var(--sage-pale); border-color: var(--sage-light); }
+.sum-lbl { font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-light); font-weight: 500; margin-bottom: 4px; }
+.sum-val { font-family: var(--serif); font-size: 17px; color: var(--ink); }
+.sum-val.sage { color: var(--sage); }
+.sum-sub { font-size: 10.5px; color: var(--ink-light); margin-top: 2px; }
+.debt-result-row { margin-bottom: 12px; }
+.debt-result-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; }
+.debt-result-name { font-size: 12.5px; font-weight: 500; color: var(--ink); display: flex; align-items: center; gap: 6px; }
+.order-badge { font-size: 9.5px; background: var(--mist-pale); color: var(--mist); padding: 1px 7px; border-radius: 99px; font-weight: 500; }
+.debt-result-meta { font-size: 11px; color: var(--ink-light); text-align: right; }
+.debt-result-date { font-weight: 500; color: var(--ink-mid); font-size: 11.5px; }
+.bar-track { height: 7px; background: var(--linen-dark); border-radius: 99px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 99px; transition: width 0.5s ease; }
+.compare-row { display: flex; gap: 9px; margin-bottom: 14px; }
+.compare-card { flex: 1; padding: 13px 15px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--linen); }
+.compare-card.winner { background: var(--sage-pale); border-color: var(--sage-light); }
+.compare-lbl { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--ink-light); font-weight: 500; margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
+.winner-badge { background: var(--sage); color: #fff; font-size: 9px; padding: 1px 6px; border-radius: 99px; }
+.compare-val { font-family: var(--serif); font-size: 16px; color: var(--ink); }
+.compare-sub { font-size: 10.5px; color: var(--ink-light); margin-top: 2px; }
+.recalc-btn { width: 100%; margin-top: 11px; padding: 10px; background: var(--ink); color: var(--linen); border: none; border-radius: var(--radius-sm); font-family: var(--sans); font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s; }
+.recalc-btn:hover { background: var(--ink-mid); }
+.remove-btn { font-size: 13px; color: var(--ink-light); background: none; border: none; cursor: pointer; padding: 2px 5px; border-radius: 4px; }
+.remove-btn:hover { background: var(--clay-pale); color: var(--clay); }
+
+/* ===================== JOURNAL ===================== */
+.rating-row { display:flex; gap:6px; }
+.rating-btn {
+  width:34px; height:34px; border-radius:50%; border:1.5px solid var(--border-med);
+  background:transparent; font-family:var(--sans); font-size:13px; font-weight:500;
+  color:var(--ink-light); cursor:pointer; transition:all 0.15s; display:flex;
+  align-items:center; justify-content:center;
+}
+.rating-btn:hover { border-color:var(--bark-light); color:var(--ink); background:var(--linen); }
+.rating-btn.active { background:var(--ink); color:var(--linen); border-color:var(--ink); }
+.rating-btn.r1.active { background:var(--clay); border-color:var(--clay); }
+.rating-btn.r2.active { background:#C49A6C; border-color:#C49A6C; }
+.rating-btn.r3.active { background:var(--bark-light); border-color:var(--bark-light); }
+.rating-btn.r4.active { background:var(--sage); border-color:var(--sage); }
+.rating-btn.r5.active { background:#4A7A5A; border-color:#4A7A5A; }
+.entry-card { background:#fff; border-radius:var(--radius); border:1px solid var(--border); padding:18px 20px; margin-bottom:10px; }
+.entry-ratings { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+.entry-rating-pill { font-size:10.5px; font-weight:500; padding:2px 9px; border-radius:99px; background:var(--linen); color:var(--ink-mid); border:1px solid var(--border); }
+.trend-bar-wrap { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.trend-label { font-size:11px; color:var(--ink-light); min-width:70px; font-family:var(--sans); }
+.trend-bar-track { flex:1; height:6px; background:var(--linen-dark); border-radius:99px; overflow:hidden; }
+.trend-bar-fill { height:100%; border-radius:99px; transition:width 0.5s ease; }
+.insight-stat-card { background:var(--linen); border-radius:var(--radius-sm); padding:13px 15px; border:1px solid var(--border); }
+.insight-stat-lbl { font-size:10px; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-light); font-weight:500; margin-bottom:3px; }
+.insight-stat-val { font-family:var(--serif); font-size:22px; color:var(--ink); margin-bottom:2px; }
+.insight-stat-sub { font-size:11px; color:var(--ink-light); font-family:var(--lora); font-style:italic; }
+.phase-avg-row { display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--border); }
+.phase-avg-row:last-child { border-bottom:none; }
+.phase-avg-label { font-size:12px; font-weight:500; color:var(--ink); min-width:90px; }
+.phase-avg-bars { display:flex; gap:6px; flex:1; flex-wrap:wrap; }
+.phase-mini-bar { display:flex; align-items:center; gap:4px; font-size:10.5px; color:var(--ink-light); }
+
+/* modal */
+.modal-overlay { position: fixed; inset: 0; background: rgba(58,48,40,0.44); z-index: 500; display: flex; align-items: center; justify-content: center; padding: 24px; opacity: 0; pointer-events: none; transition: opacity 0.18s; }
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal { background: #fff; border-radius: var(--radius); max-width: 500px; width: 100%; padding: 26px 28px; position: relative; transform: translateY(10px); transition: transform 0.18s; max-height: 80vh; overflow-y: auto; }
+.modal-overlay.open .modal { transform: none; }
+.modal-close { position: absolute; top: 15px; right: 17px; background: none; border: none; font-size: 15px; color: var(--ink-light); cursor: pointer; padding: 4px 7px; border-radius: 5px; }
+.modal-close:hover { background: var(--linen); }
+.modal-title { font-family: var(--serif); font-size: 20px; font-weight: 400; color: var(--ink); margin: 8px 0 13px; }
+.modal-body { font-family: var(--lora); font-size: 13.5px; color: var(--ink-mid); line-height: 1.72; }
+.modal-divider { border: none; border-top: 1px solid var(--border); margin: 17px 0; }
+.ai-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-light); font-weight: 500; margin-bottom: 7px; display: block; }
+.modal-ai-bar { display: flex; gap: 7px; }
+.modal-ai-input { flex: 1; background: var(--linen); border: 1px solid var(--border-med); border-radius: var(--radius-sm); padding: 7px 11px; font-family: var(--sans); font-size: 12.5px; color: var(--ink); outline: none; }
+.modal-ai-input:focus { border-color: var(--bark-light); }
+.modal-ai-input::placeholder { color: var(--ink-light); }
+
+/* loading dots */
+.ldots span { display: inline-block; animation: db 1.2s ease-in-out infinite; color: var(--sage); }
+.ldots span:nth-child(2) { animation-delay:.2s; } .ldots span:nth-child(3) { animation-delay:.4s; }
+@keyframes db { 0%,80%,100%{transform:translateY(0);opacity:.4} 40%{transform:translateY(-4px);opacity:1} }
+
+/* checklist tabs */
+.checklist-tab { padding: 4px 12px; border-radius: 99px; font-size: 11.5px; font-weight: 500; border: 1px solid var(--border-med); background: transparent; color: var(--ink-light); cursor: pointer; font-family: var(--sans); transition: all 0.15s; }
+.checklist-tab:hover { background: var(--linen-dark); color: var(--ink); }
+.checklist-tab.active { background: var(--ink); color: var(--linen); border-color: var(--ink); }
+
+/* day selector */
+.day-selector { display: flex; gap: 4px; }
+.day-btn { padding: 5px 10px; border-radius: 99px; font-size: 11.5px; font-weight: 500; border: 1px solid var(--border-med); background: transparent; color: var(--ink-light); cursor: pointer; font-family: var(--sans); transition: all 0.15s; }
+.day-btn:hover { background: var(--linen-dark); }
+.day-btn.active { background: var(--ink); color: var(--linen); border-color: var(--ink); }
+
+/* responsive mobile */
+@media (max-width: 768px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
+  .sidebar { flex-direction: row; align-items: center; overflow-x: auto; overflow-y: hidden; height: auto; padding: 0; border-right: none; border-bottom: 1px solid var(--border-med); }
+  .sidebar-logo { padding: 12px 16px; border-bottom: none; border-right: 1px solid var(--border); flex-shrink: 0; }
+  .sidebar-logo h1 { font-size: 16px; }
+  .sidebar-logo span, .sidebar-date, .sidebar-footer { display: none; }
+  .nav-group { display: flex; flex-direction: row; gap: 2px; padding: 8px 8px; }
+  .nav-group-label { display: none; }
+  .nav-item { padding: 6px 10px; font-size: 12px; white-space: nowrap; margin-bottom: 0; }
+  .main-header { padding: 16px 18px 14px; }
+  .main-header-left h2 { font-size: 20px; }
+  .main-content { padding: 16px 18px 40px; }
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .g2, .g3 { grid-template-columns: 1fr; }
+  .g-wide, .g-full { grid-column: span 1; }
+  .debt-calc-grid { grid-template-columns: 1fr; }
+  .phase-grid { grid-template-columns: 1fr; }
+  .flow-detail { padding-left: 15px; }
+  .summary-grid { grid-template-columns: 1fr 1fr; }
+  .debt-fields { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <h1>Earthwork</h1>
+      <span>Your living guide</span>
+      <div class="sidebar-date" id="sidebar-date"></div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Today</div>
+      <div class="nav-item active" data-view="dashboard" onclick="switchView('dashboard',this)">
+        <div class="nav-dot" style="background:var(--bark-light)"></div> Dashboard
+      </div>
+      <div class="nav-item" data-view="journal" onclick="switchView('journal',this)">
+        <div class="nav-dot" style="background:var(--gold)"></div> Journal
+      </div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Living Guide</div>
+      <div class="nav-item" data-view="guide" onclick="switchView('guide',this)">
+        <div class="nav-dot" style="background:var(--sage)"></div> My Guide
+      </div>
+      <div class="nav-item" data-view="cycle" onclick="switchView('cycle',this)">
+        <div class="nav-dot" style="background:var(--rose)"></div> Cycle Guide
+      </div>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Grow</div>
+      <div class="nav-item" data-view="goals" onclick="switchView('goals',this)">
+        <div class="nav-dot" style="background:var(--mist)"></div> Goals
+      </div>
+      <div class="nav-item" data-view="finance" onclick="switchView('finance',this)">
+        <div class="nav-dot" style="background:var(--clay)"></div> Finances
+      </div>
+      <div class="nav-item" data-view="debt" onclick="switchView('debt',this)">
+        <div class="nav-dot" style="background:var(--sage)"></div> Debt Payoff
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <p>Cancer Sun · Aquarius Moon<br>Manifesting Generator</p>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div id="sync-banner" style="display:none;background:var(--sage-pale);color:var(--sage);font-size:11.5px;font-family:var(--sans);padding:6px 36px;align-items:center;gap:8px;border-bottom:1px solid var(--sage-light);"></div>
+    <div class="main-header">
+      <div class="main-header-left">
+        <h2 id="view-title"></h2>
+        <p id="view-sub">Here's where things stand today.</p>
+      </div>
+      <div class="main-header-actions">
+        <button class="btn btn-ghost btn-sm" id="header-action-2" onclick="headerAction2()" style="display:none"></button>
+        <button class="btn btn-primary btn-sm" id="header-action-1" onclick="headerAction1()">+ Add entry</button>
+      </div>
+    </div>
+    <div class="main-content">
+
+      <!-- ============ DASHBOARD ============ -->
+      <div id="view-dashboard" class="view active">
+        <div class="dashboard-grid">
+
+          <!-- PHASE BANNER — full width -->
+          <div id="phase-banner-card" class="g-full phase-banner" style="background:#fff;">
+            <div class="phase-banner-accent" id="phase-banner-accent"></div>
+            <div class="phase-banner-top">
+              <div>
+                <div class="phase-banner-title" id="phase-banner-title">Loading your phase…</div>
+                <div class="phase-banner-subtitle" id="phase-banner-subtitle"></div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+                <span class="phase-banner-pill" id="phase-banner-pill"></span>
+                <div style="display:flex;align-items:center;gap:7px;">
+                  <span style="font-size:11px;color:var(--ink-light);">Cycle day</span>
+                  <input type="number" id="banner-cycle-day" min="1" max="35" style="width:50px;background:var(--linen);border:1px solid var(--border-med);border-radius:6px;padding:4px 7px;font-family:var(--sans);font-size:13px;font-weight:500;color:var(--ink);text-align:center;outline:none;" oninput="syncCycleDayFromBanner(+this.value)">
+                </div>
+              </div>
+            </div>
+            <div class="phase-banner-body" id="phase-banner-body"></div>
+            <div class="phase-banner-bullets" id="phase-banner-bullets"></div>
+            <div class="phase-banner-chart" id="phase-banner-chart" style="display:none;">
+              <div class="phase-banner-chart-lbl">Chart note</div>
+              <span id="phase-banner-chart-text"></span>
+            </div>
+            <div class="husband-note" id="phase-banner-husband" style="display:none;">
+              <div class="husband-note-lbl">Say this to your husband</div>
+              <span id="phase-banner-husband-text"></span>
+            </div>
+          </div>
+
+          <!-- WEEKLY RHYTHM CARD -->
+          <div id="weekly-rhythm-card" class="g-wide rhythm-card">
+            <div class="card-accent" style="background:var(--bark-light);height:3px;border-radius:var(--radius) var(--radius) 0 0;margin:-20px -22px 16px;"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+              <div class="card-label" style="margin-bottom:0;">This week's rhythm</div>
+              <div id="rhythm-phase-chips" class="rhythm-phase-row" style="margin-bottom:0;"></div>
+            </div>
+            <div id="rhythm-content"></div>
+          </div>
+
+          <!-- DAILY ROTATING PRACTICE CARD -->
+          <div class="daily-card-wrapper">
+            <div class="card-accent" style="background:var(--sage);height:3px;border-radius:var(--radius) var(--radius) 0 0;margin:-20px -22px 16px;"></div>
+            <div class="daily-card-meta">
+              <div class="card-label" style="margin-bottom:0;">Today's practice</div>
+              <span id="daily-card-phase-pill" style="font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.07em;padding:2px 9px;border-radius:99px;background:var(--sage-pale);color:var(--sage);"></span>
+            </div>
+            <div class="daily-card-title" id="daily-card-title"></div>
+            <div class="daily-card-prompt" id="daily-card-prompt"></div>
+            <div class="daily-card-reflection" id="daily-card-reflection"></div>
+          </div>
+
+          <!-- Journal quick entry -->
+          <div class="card g-wide">
+            <div class="card-accent" style="background:var(--gold)"></div>
+            <div class="card-label">Daily journal</div>
+            <div class="journal-prompt" id="dash-prompt">"What felt heavy this week, and what helped lighten it?"</div>
+            <textarea class="journal-ta" id="dash-journal-ta" placeholder="Begin writing… this space is just yours."></textarea>
+            <div class="ai-bar">
+              <input class="ai-input" id="dash-ai-input" placeholder="Ask for a reflection prompt, or let AI help you start…" onkeydown="if(event.key==='Enter')dashAsk()">
+              <button class="btn btn-primary btn-sm" onclick="dashAsk()">Ask</button>
+            </div>
+            <div class="ai-response" id="dash-ai-resp"></div>
+            <div style="margin-top:10px;text-align:right;">
+              <button class="btn btn-primary btn-sm" onclick="saveDashJournal()">Save entry</button>
+            </div>
+          </div>
+
+          <!-- Rituals + Daily Checklist -->
+          <div class="card">
+            <div class="card-accent" style="background:var(--sage)"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <div class="card-label" style="margin-bottom:0;">Today's checklist</div>
+              <div style="display:flex;gap:3px;" id="checklist-tabs">
+                <button class="checklist-tab active" onclick="switchChecklist('morning',this)">Morning</button>
+                <button class="checklist-tab" onclick="switchChecklist('daily',this)">Full day</button>
+              </div>
+            </div>
+            <div id="dash-rituals"></div>
+            <div id="dash-daily" style="display:none;"></div>
+            <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:11px;color:var(--ink-light);font-family:var(--lora);font-style:italic;" id="checklist-progress"></span>
+              <button style="font-size:11px;color:var(--ink-light);background:none;border:none;cursor:pointer;font-family:var(--sans);padding:2px 6px;border-radius:5px;" onmouseover="this.style.background='var(--linen-dark)'" onmouseout="this.style.background='none'" onclick="resetChecklist()">Reset</button>
+            </div>
+          </div>
+
+          <!-- Goals -->
+          <div class="card">
+            <div class="card-accent" style="background:var(--mist)"></div>
+            <div class="card-label">Active goals</div>
+            <div id="dash-goals"></div>
+          </div>
+
+          <!-- Finance snapshot -->
+          <div class="card">
+            <div class="card-accent" style="background:var(--clay)"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <div class="card-label" style="margin-bottom:0;">Finances this month</div>
+              <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:4px 10px;" onclick="switchView('finance',document.querySelector('[data-view=finance]'))">Edit</button>
+            </div>
+            <div class="savgrid" id="dash-fin-savings"></div>
+            <div id="dash-fin-rows"></div>
+          </div>
+
+          <!-- Debt snapshot -->
+          <div class="card">
+            <div class="card-accent" style="background:var(--sage-light)"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <div class="card-label" style="margin-bottom:0;">Debt progress</div>
+              <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:4px 10px;" onclick="openDebtEditModal()">Edit</button>
+            </div>
+            <div id="dash-debt-list"></div>
+          </div>
+
+          <!-- Supplements -->
+          <div class="card g-wide">
+            <div class="card-accent" style="background:var(--plum)"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <div class="card-label" style="margin-bottom:0;">Daily supplements</div>
+              <span style="font-size:11px;color:var(--ink-light);font-family:var(--lora);font-style:italic;" id="supp-progress"></span>
+            </div>
+            <div id="supp-list" style="display:grid;grid-template-columns:1fr 1fr;gap:0;"></div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ============ JOURNAL ============ -->
+      <div id="view-journal" class="view">
+        <div class="guide-tabs" id="journal-tabs">
+          <button class="gtab active" onclick="showJTab('write',this)">Write</button>
+          <button class="gtab" onclick="showJTab('entries',this)">Entries</button>
+          <button class="gtab" onclick="showJTab('insights',this)">Insights</button>
+        </div>
+
+        <!-- WRITE TAB -->
+        <div id="jt-write" class="gsection active">
+          <div class="card" style="margin-bottom:14px;">
+            <div class="card-accent" style="background:var(--gold)"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+              <div class="card-label" style="margin-bottom:0;">Today's entry</div>
+              <div style="display:flex;gap:7px;align-items:center;">
+                <span style="font-size:11px;color:var(--ink-light);font-family:var(--lora);font-style:italic;" id="j-date-display"></span>
+                <button class="btn btn-ghost btn-sm" style="font-size:11px;" onclick="cyclePrompt()">New prompt</button>
+              </div>
+            </div>
+            <div class="journal-prompt" id="journal-prompt-display">"What felt heavy this week, and what helped lighten it?"</div>
+            <textarea class="journal-ta" id="journal-ta" style="height:180px;" placeholder="Begin writing… this space is just yours."></textarea>
+            <div class="ai-bar" style="margin-top:10px;">
+              <input class="ai-input" id="journal-ai-input" placeholder="Ask AI for a prompt or reflection…" onkeydown="if(event.key==='Enter')journalAsk()">
+              <button class="btn btn-primary btn-sm" onclick="journalAsk()">Ask AI</button>
+            </div>
+            <div class="ai-response" id="journal-ai-resp"></div>
+          </div>
+
+          <!-- CHECK-IN PANEL -->
+          <div class="card" style="margin-bottom:14px;">
+            <div class="card-accent" style="background:var(--mist)"></div>
+            <div class="card-label">Daily check-in</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px;">
+              <div>
+                <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-light);font-weight:500;margin-bottom:7px;">Mood</div>
+                <div class="rating-row" id="r-mood" data-key="mood"></div>
+              </div>
+              <div>
+                <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-light);font-weight:500;margin-bottom:7px;">Energy</div>
+                <div class="rating-row" id="r-energy" data-key="energy"></div>
+              </div>
+              <div>
+                <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-light);font-weight:500;margin-bottom:7px;">Sleep quality</div>
+                <div class="rating-row" id="r-sleep" data-key="sleep"></div>
+              </div>
+              <div>
+                <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-light);font-weight:500;margin-bottom:7px;">Brain clarity</div>
+                <div class="rating-row" id="r-clarity" data-key="clarity"></div>
+              </div>
+              <div>
+                <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-light);font-weight:500;margin-bottom:7px;">Anxiety</div>
+                <div class="rating-row" id="r-anxiety" data-key="anxiety"></div>
+              </div>
+              <div>
+                <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-light);font-weight:500;margin-bottom:7px;">Cycle day</div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <input class="field-input" type="number" id="j-cycle-day" min="1" max="35" style="width:64px;text-align:center;" placeholder="—">
+                  <span style="font-size:11px;color:var(--ink-light);font-family:var(--lora);font-style:italic;" id="j-phase-label"></span>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-light);font-weight:500;margin-bottom:6px;">Physical symptoms <span style="text-transform:none;letter-spacing:0;font-weight:400;font-family:var(--lora);font-style:italic;">(optional)</span></div>
+              <input class="field-input" id="j-symptoms" style="width:100%;" placeholder="e.g. headache, bloating, poor sleep, cramps, brain fog…">
+            </div>
+          </div>
+
+          <div style="display:flex;justify-content:flex-end;gap:9px;">
+            <button class="btn" onclick="clearJournalForm()">Clear</button>
+            <button class="btn btn-primary" onclick="saveJournalEntry()">Save entry</button>
+          </div>
+        </div>
+
+        <!-- ENTRIES TAB -->
+        <div id="jt-entries" class="gsection">
+          <div style="display:flex;gap:8px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
+            <input class="field-input" id="j-search" placeholder="Search entries…" style="flex:1;min-width:160px;" oninput="renderJournalEntries()">
+            <select class="field-input" id="j-filter-phase" style="width:auto;" onchange="renderJournalEntries()">
+              <option value="">All phases</option>
+              <option value="Follicular">Follicular</option>
+              <option value="Ovulatory">Ovulatory</option>
+              <option value="Luteal">Luteal</option>
+              <option value="Menstrual">Menstrual</option>
+            </select>
+          </div>
+          <div id="journal-entries-list"></div>
+        </div>
+
+        <!-- INSIGHTS TAB -->
+        <div id="jt-insights" class="gsection">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;" id="insights-stats"></div>
+
+          <div class="card" style="margin-bottom:14px;">
+            <div class="card-accent" style="background:var(--sage)"></div>
+            <div class="card-label" style="margin-bottom:12px;">Trends over time</div>
+            <div id="trends-chart" style="overflow-x:auto;"></div>
+          </div>
+
+          <div class="card" style="margin-bottom:14px;">
+            <div class="card-accent" style="background:var(--mist)"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+              <div class="card-label" style="margin-bottom:0;">AI insights</div>
+              <div style="display:flex;gap:6px;">
+                <button class="btn btn-sm" onclick="getWeeklyInsight()">This week</button>
+                <button class="btn btn-sm" onclick="getMonthlyInsight()">This month</button>
+              </div>
+            </div>
+            <div style="font-size:11.5px;color:var(--ink-light);font-family:var(--lora);font-style:italic;margin-bottom:12px;">Ask anything about your patterns, or request a weekly or monthly summary above.</div>
+            <div class="ai-bar">
+              <input class="ai-input" id="insights-ai-input" placeholder="e.g. What patterns do you notice in my anxiety? When is my energy highest?" onkeydown="if(event.key==='Enter')getCustomInsight()">
+              <button class="btn btn-primary btn-sm" onclick="getCustomInsight()">Ask</button>
+            </div>
+            <div class="ai-response" id="insights-ai-resp" style="margin-top:10px;"></div>
+          </div>
+
+          <div class="card">
+            <div class="card-accent" style="background:var(--gold)"></div>
+            <div class="card-label" style="margin-bottom:12px;">Cycle phase averages</div>
+            <div id="phase-averages"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ LIVING GUIDE ============ -->
+      <div id="view-guide" class="view">
+        <div class="guide-tabs">
+          <button class="gtab active" onclick="showGTab('cards',this)">Practice Cards</button>
+          <button class="gtab" onclick="showGTab('flow',this)">Daily Flow</button>
+          <button class="gtab" onclick="showGTab('anchors',this)">Daily Anchors</button>
+          <button class="gtab" onclick="showGTab('blueprint',this)">Cosmic Blueprint</button>
+        </div>
+
+        <!-- Practice Cards -->
+        <div id="gsec-cards" class="gsection active">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;">
+            <div class="chip-row" style="margin-bottom:0;">
+              <span class="chip-label">Filter</span>
+              <button class="chip on" onclick="filterCards('all',this)">All</button>
+              <button class="chip gold" onclick="filterCards('morning',this)">Morning</button>
+              <button class="chip sage" onclick="filterCards('nourishment',this)">Nourishment</button>
+              <button class="chip clay" onclick="filterCards('movement',this)">Movement</button>
+              <button class="chip mist" onclick="filterCards('mindset',this)">Mindset</button>
+              <button class="chip plum" onclick="filterCards('evening',this)">Evening</button>
+              <button class="chip bark" onclick="filterCards('wellness',this)">Wellness</button>
+            </div>
+            <div style="display:flex;gap:7px;">
+              <button class="btn btn-sm" onclick="toggleImport()">+ Import text</button>
+              <button class="btn btn-primary btn-sm" onclick="addCardPrompt()">+ New card</button>
+            </div>
+          </div>
+          <div class="import-panel hidden" id="import-panel">
+            <div class="card-label">Paste any text — AI will organize it into practice cards automatically</div>
+            <textarea class="import-ta" id="import-ta" placeholder="Paste notes, routines, intentions, rituals, affirmations…"></textarea>
+            <div class="import-actions">
+              <button class="btn btn-primary btn-sm" onclick="processImport()">Organize into cards</button>
+              <button class="btn btn-sm" onclick="toggleImport()">Cancel</button>
+              <span style="font-size:11.5px;color:var(--ink-light);font-family:var(--lora);font-style:italic;">~10–15 seconds</span>
+            </div>
+            <div class="import-status" id="import-status"></div>
+          </div>
+          <div class="cards-grid" id="cards-grid"></div>
+        </div>
+
+        <!-- Daily Flow -->
+        <div id="gsec-flow" class="gsection">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;">
+            <div class="card-title" id="flow-day-label" style="margin-bottom:0;">Monday — Intention &amp; Direction</div>
+            <div class="day-selector" id="day-selector"></div>
+          </div>
+          <div id="flow-list"></div>
+        </div>
+
+        <!-- Daily Anchors -->
+        <div id="gsec-anchors" class="gsection">
+          <p style="font-family:var(--lora);font-style:italic;font-size:13px;color:var(--ink-light);margin-bottom:18px;line-height:1.6;">Eight non-negotiables built from your chart. They appear in some form every single day.</p>
+          <div class="card" style="padding:0 22px;"><div id="anchors-list"></div></div>
+        </div>
+
+        <!-- Blueprint -->
+        <div id="gsec-blueprint" class="gsection">
+          <div class="hd-grid" id="hd-grid"></div>
+          <div id="placement-list"></div>
+        </div>
+      </div>
+
+      <!-- ============ CYCLE GUIDE ============ -->
+      <div id="view-cycle" class="view">
+        <div class="cycle-day-row">
+          <span style="font-size:12px;font-weight:500;color:var(--ink-mid);">Today is cycle day</span>
+          <input class="cycle-day-input" type="number" id="cycle-day" min="1" max="35" value="10" oninput="setCyclePhaseFromInput(+this.value)">
+          <span id="cycle-badge" style="font-size:12px;font-weight:500;padding:4px 12px;border-radius:99px;font-family:var(--sans);"></span>
+          <span id="cycle-phase-lbl" style="font-family:var(--lora);font-style:italic;font-size:12px;color:var(--ink-light);"></span>
+        </div>
+        <div class="phase-grid" id="phase-grid"></div>
+      </div>
+
+      <!-- ============ GOALS ============ -->
+      <div id="view-goals" class="view">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:10px;">
+          <div class="chip-row" style="margin-bottom:0;">
+            <span class="chip-label">Filter</span>
+            <button class="chip on" onclick="filterGoals('all',this)">All</button>
+            <button class="chip mist" onclick="filterGoals('career',this)">Career</button>
+            <button class="chip clay" onclick="filterGoals('notary',this)">Notary</button>
+            <button class="chip gold" onclick="filterGoals('financial',this)">Financial</button>
+            <button class="chip sage" onclick="filterGoals('wellness',this)">Wellness</button>
+            <button class="chip plum" onclick="filterGoals('personal',this)">Personal</button>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="openAddGoalModal()">+ New goal</button>
+        </div>
+        <div id="goals-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;"></div>
+      </div>
+
+      <!-- ============ FINANCE ============ -->
+      <div id="view-finance" class="view">
+        <div class="g2">
+          <div class="card">
+            <div class="card-label">Monthly summary</div>
+            <div class="savgrid">
+              <div class="savcell"><div class="savcell-lbl">Saved this month</div><div class="savcell-val" id="fin-saved">$840</div></div>
+              <div class="savcell"><div class="savcell-lbl">Total savings</div><div class="savcell-val" id="fin-total">$4,200</div></div>
+            </div>
+            <div id="fin-rows"></div>
+            <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap;">
+              <input class="field-input" id="fin-label-in" placeholder="Label" style="flex:2;min-width:100px;">
+              <input class="field-input" id="fin-amount-in" placeholder="Amount" type="number" style="flex:1;min-width:80px;">
+              <select class="field-input" id="fin-type-in" style="flex:1;min-width:90px;"><option value="income">Income</option><option value="expense">Expense</option></select>
+              <button class="btn btn-primary btn-sm" onclick="addFinRow()">Add</button>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-label">Savings milestones</div>
+            <div id="savings-milestones"></div>
+            <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--border);display:flex;gap:8px;">
+              <input class="field-input" id="mile-label" placeholder="Milestone name" style="flex:2;">
+              <input class="field-input" id="mile-target" placeholder="Target $" type="number" style="flex:1;">
+              <button class="btn btn-primary btn-sm" onclick="addMilestone()">Add</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ DEBT PAYOFF ============ -->
+      <div id="view-debt" class="view">
+        <div class="debt-calc-grid">
+          <div class="card">
+            <div class="card-label">Your debts</div>
+            <div id="debt-inputs"></div>
+            <button class="add-debt-btn" onclick="addDebt()">+ Add another debt</button>
+            <div class="extra-row">
+              <div class="extra-label">Extra monthly payment</div>
+              <div class="extra-controls">
+                <span style="font-size:11px;color:var(--bark);">$0</span>
+                <input type="range" min="0" max="1000" step="25" value="200" id="extra-slider" oninput="updateExtra(this.value)">
+                <span style="font-size:11px;color:var(--bark);">$1,000</span>
+              </div>
+              <div class="extra-amount" id="extra-display">$200 / mo extra</div>
+            </div>
+            <button class="recalc-btn" onclick="calcDebt()">Calculate payoff plan</button>
+          </div>
+          <div class="card">
+            <div class="card-label" style="margin-bottom:12px;">Strategy</div>
+            <div class="strategy-row">
+              <button class="strat-btn active" id="sb-snowball" onclick="setStrat('snowball')">Snowball<div style="font-size:10px;font-weight:400;margin-top:2px;opacity:.7;">Smallest first</div></button>
+              <button class="strat-btn" id="sb-avalanche" onclick="setStrat('avalanche')">Avalanche<div style="font-size:10px;font-weight:400;margin-top:2px;opacity:.7;">Highest rate first</div></button>
+              <button class="strat-btn" id="sb-compare" onclick="setStrat('compare')">Compare<div style="font-size:10px;font-weight:400;margin-top:2px;opacity:.7;">Side by side</div></button>
+            </div>
+            <div class="strat-desc" id="strat-desc">Pay minimums on everything, then throw every extra dollar at your smallest balance. Each payoff gives you momentum and a freed-up minimum to roll into the next.</div>
+            <div id="debt-results"></div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /main-content -->
+  </main>
+</div>
+
+<!-- DEBT EDIT MODAL -->
+<div class="modal-overlay" id="debt-edit-modal" onclick="closeDebtEditModal(event)">
+  <div class="modal" style="max-width:480px;">
+    <button class="modal-close" onclick="closeDebtEditModalDirect()">✕</button>
+    <div class="modal-title" style="font-size:18px;margin-bottom:4px;">Edit debts</div>
+    <p style="font-family:var(--lora);font-style:italic;font-size:12.5px;color:var(--ink-light);margin-bottom:16px;">Changes save instantly and update the dashboard and payoff calculator.</p>
+    <div id="debt-edit-list"></div>
+    <button class="add-debt-btn" style="margin-top:4px;" onclick="addDebtFromModal()">+ Add another debt</button>
+    <div style="margin-top:16px;display:flex;justify-content:flex-end;gap:8px;">
+      <button class="btn btn-primary" onclick="closeDebtEditModalDirect()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- CARD MODAL -->
+<div class="modal-overlay" id="card-modal" onclick="closeCardModal(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeCardModalDirect()">✕</button>
+    <div id="m-cat"></div>
+    <div class="modal-title" id="m-title"></div>
+    <div class="modal-body" id="m-body"></div>
+    <hr class="modal-divider">
+    <span class="ai-label">Ask about this practice</span>
+    <div class="modal-ai-bar">
+      <input class="modal-ai-input" id="m-ai-input" placeholder="e.g. How can I build this into my morning?" onkeydown="if(event.key==='Enter')cardAskAI()">
+      <button class="btn btn-primary btn-sm" onclick="cardAskAI()">Ask</button>
+    </div>
+    <div class="ai-response" id="m-ai-resp" style="margin-top:9px;"></div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  SUPABASE CONFIG
+// ============================================================
+const SUPABASE_URL = 'https://vclkfrqskpcekztfnrte.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZjbGtmcnFza3BjZWt6dGZucnRlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU2MDQ4NjEsImV4cCI6MjA5MTE4MDg2MX0.jj060lDRjEgRndylZtd-6kQSR5LOMMFCfpbGvAsqVeY';
+
+async function sbGet(key) {
+  try {
+    const res = await fetch(SUPABASE_URL + '/rest/v1/earthwork_data?key=eq.' + encodeURIComponent(key) + '&select=value', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    const rows = await res.json();
+    return rows && rows.length ? rows[0].value : null;
+  } catch(e) { return null; }
+}
+
+async function sbSet(key, value) {
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/earthwork_data', {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify({ key, value, updated_at: new Date().toISOString() })
+    });
+  } catch(e) {}
+}
+
+async function sbDel(key) {
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/earthwork_data?key=eq.' + encodeURIComponent(key), {
+      method: 'DELETE',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+  } catch(e) {}
+}
+
+// ============================================================
+//  STORAGE HELPERS
+// ============================================================
+const CLOUD_KEYS = ['goals','debts','finRows','milestones','practiceCards','journalEntries','promptIdx'];
+const LOCAL_ONLY_KEYS = ['rituals_','dailyItems_','suppState_','appVersion','cycleDay'];
+
+function isLocalOnly(k) {
+  return LOCAL_ONLY_KEYS.some(prefix => k.startsWith(prefix));
+}
+
+const S = {
+  get(k, def=null) {
+    try { const v=localStorage.getItem(k); return v!==null?JSON.parse(v):def; } catch(e){ return def; }
+  },
+  set(k, v) {
+    try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){}
+    if (!isLocalOnly(k)) sbSet(k, v);
+  },
+  del(k) {
+    try { localStorage.removeItem(k); } catch(e){}
+    if (!isLocalOnly(k)) sbDel(k);
+  }
+};
+
+const APP_VERSION = '5.2';
+S.set('appVersion', APP_VERSION);
+
+// ============================================================
+//  GLOBAL STATE
+// ============================================================
+const today = new Date();
+const DAYS_SHORT = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const DAYS_LONG = ['Sunday — Reflection & Renewal','Monday — Intention & Direction','Tuesday — Communication & Connection','Wednesday — Mid-Week Momentum','Thursday — Depth & Detail','Friday — Completion & Release','Saturday — Rest & Restore'];
+let currentView = 'dashboard';
+let timers = {};
+let debtStrategy = 'snowball';
+let openCardId = null;
+let cardNextId = 50;
+
+// Cycle day — persisted locally, synced across input fields
+let _cycleDay = S.get('cycleDay', 18);
+
+function getCycleDay() { return _cycleDay; }
+function setCycleDayGlobal(day) {
+  _cycleDay = day;
+  S.set('cycleDay', day);
+  // sync all cycle day inputs
+  ['cycle-day','banner-cycle-day','j-cycle-day'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.value != day) el.value = day;
+  });
+  updatePhaseBanner(day);
+  updateWeeklyRhythm(day);
+  updateDailyCard(day);
+  updateJournalPhaseLabel(day);
+  setCyclePhase(day);
+}
+
+function syncCycleDayFromBanner(day) { if(day>=1&&day<=35) setCycleDayGlobal(day); }
+function setCyclePhaseFromInput(day) { if(day>=1&&day<=35) setCycleDayGlobal(day); }
+
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h >= 5  && h < 12) return 'Good morning, Katie.';
+  if (h >= 12 && h < 17) return 'Good afternoon, Katie.';
+  if (h >= 17 && h < 21) return 'Good evening, Katie.';
+  return 'Still up, Katie?';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const el = document.getElementById('view-title');
+  if (el) el.textContent = getGreeting();
+});
+
+// ============================================================
+//  PHASE DATA (updated per AI feedback)
+// ============================================================
+const PHASE_DATA = {
+  menstrual: {
+    days: [1,2,3,4,5],
+    label: 'Menstrual',
+    archetype: 'Inner Winter — Your clarity peak',
+    accent: 'var(--rose)',
+    accentPale: 'var(--rose-pale)',
+    pillStyle: 'background:var(--rose-pale);color:var(--rose);',
+    isPowerWindow: true,
+    body: 'Your data confirms it: menstrual phase is where your mood and clarity actually peak, and anxiety drops to its lowest. This is the opposite of the cultural narrative. Your system finds deep wisdom in stillness. This is not rest as recovery — this is rest as strategy. Your most important thinking happens here.',
+    bullets: [
+      'Protect this window. The insights that surface in Days 1–5 are disproportionately accurate — journal them, even if you don\'t act on them yet.',
+      'Schedule high-clarity solo work: writing, strategic thinking, decisions that require gut-level honesty. This is when Mercury in Cancer is most truthful.',
+      'Cancel what can be cancelled. Your Aquarius Moon will resist appearing low-functioning — let your Cancer Sun lead here.',
+      'Warmth, broths, slow food. Gentle movement only — walks, restorative yoga, lymphatic drainage.',
+    ],
+    chartNote: 'Your Cancer Sun knows what your Aquarius Moon resists: the most truthful version of yourself surfaces when you stop performing and go quiet. Days 1–5 are not a shutdown. They are your data collection window for the entire cycle ahead.',
+    husbandScript: null,
+  },
+  follicular: {
+    days: [6,7,8,9,10,11,12,13],
+    label: 'Follicular',
+    archetype: 'Inner Spring — Rebuilding energy',
+    accent: 'var(--mist)',
+    accentPale: 'var(--mist-pale)',
+    pillStyle: 'background:var(--mist-pale);color:var(--mist);',
+    isPowerWindow: false,
+    body: 'Estrogen is rising and you\'re rebuilding. Energy is increasing but the tank isn\'t full yet — this is a common window for anxiety to spike as you try to match the rebuilding feeling with output. Your data supports this: follicular is when waiting and uncertainty hit hardest. Respond to what\'s in front of you, but don\'t force the schedule.',
+    bullets: [
+      'Schedule career-facing work: applications, LinkedIn updates, recruiter calls. Your verbal confidence is climbing.',
+      'Start new projects and brainstorm for Cascade Notary strategy — follicular is your best window for fresh thinking.',
+      'Watch the urge to overschedule. The yes-energy is rising but you\'re still in the rebuild. Your sacral still applies.',
+      'Increase workout intensity gradually. Follicular is your strongest phase for starting new fitness habits.',
+    ],
+    chartNote: 'Mercury in Cancer is at its most articulate in late follicular (Days 10–13). Save your most ambitious professional conversations and proposals for this window, not early follicular when you\'re still coming online.',
+    husbandScript: null,
+  },
+  ovulatory: {
+    days: [14,15,16,17],
+    label: 'Ovulatory',
+    archetype: 'Inner Summer — Watch for depletion',
+    accent: 'var(--gold)',
+    accentPale: 'var(--gold-pale)',
+    pillStyle: 'background:var(--gold-pale);color:var(--bark);',
+    isPowerWindow: false,
+    body: 'Your data flagged something important: your ovulatory phase crashed hard (mood 1.0, energy 1.0, anxiety 4.0, body felt like "GARBAGE"). What\'s supposed to be peak energy is becoming a depletion point — a pattern consistent with perimenopause hormonal shifts. The old ovulatory surge may no longer be reliable for you. Track carefully this cycle.',
+    bullets: [
+      'If you feel the surge: use it for high-visibility work, interviews, client calls, salary negotiations. But don\'t count on it.',
+      'If you feel the crash: this is real and physiological, not a character flaw. Reduce output expectations immediately.',
+      'Log your symptoms this cycle — mood, energy, body sensations. You\'re building a pattern picture over a few cycles.',
+      'Watch for over-commitment. Even if energy is up, your sacral check-in still determines what actually gets a yes.',
+    ],
+    chartNote: 'Venus in Leo is most outward-facing here — enjoy the magnetism if it\'s present. But given your emerging depletion pattern, hold your ovulatory plans loosely and have a rest protocol ready if the crash arrives instead.',
+    husbandScript: null,
+  },
+  earlyLuteal: {
+    days: [18,19,20,21,22],
+    label: 'Early Luteal',
+    archetype: 'Inner Autumn — Your other power window',
+    accent: 'var(--clay)',
+    accentPale: 'var(--clay-pale)',
+    pillStyle: 'background:var(--clay-pale);color:var(--clay);',
+    isPowerWindow: true,
+    body: 'Your AI analysis identified this: early luteal is a genuine power window for you. Progesterone\'s calming effect creates focus and groundedness. Mood is climbing, anxiety is manageable, clarity is high. This is where the most demanding business development work belongs — not follicular, not ovulatory. Use this window deliberately.',
+    bullets: [
+      'Schedule your highest-stakes notary business development work here: platform outreach, pricing strategy, client acquisition planning.',
+      'Deep work, editing, organizing, detail-intensive tasks — all land well in early luteal.',
+      'Deep clean and order your home. Your Cancer Ascendant is genuinely soothed by an ordered space, and this phase gives you the energy to do it right.',
+      'Start winding down ambitious scheduling by Day 22. The cliff arrives around Day 23.',
+    ],
+    chartNote: 'Your data shows mood and clarity peaking in this range. This is not intuition — it\'s your actual pattern. Schedule accordingly and protect this window from the low-value tasks you could do anytime.',
+    husbandScript: null,
+  },
+  lateLuteal: {
+    days: [23,24,25,26,27,28,29],
+    label: 'Late Luteal',
+    archetype: 'Inner Late Autumn — Protect and nourish',
+    accent: 'var(--rose)',
+    accentPale: 'var(--rose-pale)',
+    pillStyle: 'background:var(--rose-pale);color:var(--rose);',
+    isPowerWindow: true,
+    body: 'The hormonal cliff is real and physiological. Declining progesterone and erratic estrogen create the mood dip, the irritability, the withdrawal urge. But your data also shows something important: even here, your clarity is still elevated from the luteal phase. You can still do deep introspective work — just not high-output, performative, or socially demanding work.',
+    bullets: [
+      'No new commitments, negotiations, or major decisions. This is not you — this is biochemistry.',
+      'Journal specifically in Days 25–28. Mercury in Cancer processes what it\'s carrying rather than accumulating it. These entries often hold your most honest thinking.',
+      'Magnesium glycinate to maximum dose. Replace intense exercise with walking, yoga, gentle strength work.',
+      'Dark chocolate (85%+) is genuinely medicine. Warmth, low stimulation, early evenings.',
+    ],
+    chartNote: 'This is where your Aquarius Moon\'s shadow appears: detachment, irritability, simultaneous wanting to withdraw and feeling lonely. The insight is in the pattern, not the individual days.',
+    husbandScript: 'I need to be close and I also need you to not take my quietness personally right now.',
+  },
+};
+
+function getPhaseData(day) {
+  if (day >= 1  && day <= 5)  return { ...PHASE_DATA.menstrual,   key: 'menstrual'   };
+  if (day >= 6  && day <= 13) return { ...PHASE_DATA.follicular,  key: 'follicular'  };
+  if (day >= 14 && day <= 17) return { ...PHASE_DATA.ovulatory,   key: 'ovulatory'   };
+  if (day >= 18 && day <= 22) return { ...PHASE_DATA.earlyLuteal, key: 'earlyLuteal' };
+  return { ...PHASE_DATA.lateLuteal, key: 'lateLuteal' };
+}
+
+function getCyclePhaseFromDay(day) {
+  if (!day) return '';
+  if (day>=1&&day<=5)   return 'Menstrual';
+  if (day>=6&&day<=13)  return 'Follicular';
+  if (day>=14&&day<=17) return 'Ovulatory';
+  if (day>=18&&day<=22) return 'Early Luteal';
+  return 'Late Luteal';
+}
+
+// ============================================================
+//  PHASE BANNER (dashboard)
+// ============================================================
+function updatePhaseBanner(day) {
+  const p = getPhaseData(day);
+  const banner = document.getElementById('phase-banner-card');
+  if (!banner) return;
+
+  banner.style.background = '#fff';
+  document.getElementById('phase-banner-accent').style.background = p.accent;
+  document.getElementById('phase-banner-title').textContent = p.archetype;
+  document.getElementById('phase-banner-subtitle').textContent = 'Cycle Day ' + day + ' · ' + p.label + ' Phase' + (p.isPowerWindow ? ' ✦ Power Window' : '');
+  document.getElementById('phase-banner-pill').style.cssText = p.pillStyle + 'font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:0.07em;padding:4px 12px;border-radius:99px;';
+  document.getElementById('phase-banner-pill').textContent = p.label;
+
+  document.getElementById('phase-banner-body').textContent = p.body;
+
+  const bulletsEl = document.getElementById('phase-banner-bullets');
+  bulletsEl.innerHTML = p.bullets.map(b =>
+    `<div class="phase-banner-bullet"><span class="phase-banner-bullet-dot">✦</span><span>${b}</span></div>`
+  ).join('');
+
+  const chartEl = document.getElementById('phase-banner-chart');
+  if (p.chartNote) {
+    chartEl.style.display = '';
+    document.getElementById('phase-banner-chart-text').textContent = p.chartNote;
+  } else {
+    chartEl.style.display = 'none';
+  }
+
+  const husbandEl = document.getElementById('phase-banner-husband');
+  if (p.husbandScript) {
+    husbandEl.style.display = '';
+    document.getElementById('phase-banner-husband-text').textContent = p.husbandScript;
+  } else {
+    husbandEl.style.display = 'none';
+  }
+}
+
+// ============================================================
+//  WEEKLY RHYTHM CARD
+// ============================================================
+const RHYTHM_DATA = {
+  menstrual: {
+    thisWeek: [
+      { label: 'Power moves this phase', items: ['Strategic thinking and journaling', 'Solo deep work — writing, reflection, planning', 'Reviewing and synthesizing information'] },
+      { label: 'Defer to another phase', items: ['Sales calls and client-facing outreach', 'High-output business development', 'Major decisions and negotiations'] },
+    ],
+    caution: null,
+    color: 'var(--rose)',
+    colorPale: 'var(--rose-pale)',
+  },
+  follicular: {
+    thisWeek: [
+      { label: 'Power moves this phase', items: ['Job applications and tailored cover letters', 'LinkedIn updates and recruiter outreach', 'Brainstorming Cascade Notary strategy'] },
+      { label: 'Watch for', items: ['Anxiety spiking from the waiting and uncertainty', 'Overscheduling on rising energy — your sacral still leads', 'Jumping to action before the rebuild is complete'] },
+    ],
+    caution: 'Follicular anxiety tends to spike hardest when you\'re rebuilding energy. The uncertainty of job search and notary launch lives loudest right now. This is the phase, not the reality.',
+    color: 'var(--mist)',
+    colorPale: 'var(--mist-pale)',
+  },
+  ovulatory: {
+    thisWeek: [
+      { label: 'If the surge shows up', items: ['Final round interviews', 'Salary negotiations', 'High-visibility networking and client calls'] },
+      { label: 'If the crash shows up instead', items: ['Reduce output expectations immediately', 'Log symptoms: mood, energy, body sensations', 'Rest protocol: same as late luteal'] },
+    ],
+    caution: 'Your ovulatory phase has been crashing rather than surging. Hold your plans loosely. Have a pivot to rest ready.',
+    color: 'var(--gold)',
+    colorPale: 'var(--gold-pale)',
+  },
+  earlyLuteal: {
+    thisWeek: [
+      { label: 'This is your business development window', items: ['Cascade Notary: platform outreach, rate strategy, client acquisition', 'Detail-intensive work: editing, auditing, organizing', 'Deep home reset — Cancer Ascendant thrives with ordered space'] },
+      { label: 'Begin winding down by Day 22', items: ['No new major commitments after Day 22', 'Frontload the week; protect the end'] },
+    ],
+    caution: null,
+    color: 'var(--clay)',
+    colorPale: 'var(--clay-pale)',
+  },
+  lateLuteal: {
+    thisWeek: [
+      { label: 'What still works', items: ['Deep journaling — Days 25–28 hold your most honest thinking', 'Solo introspective work at your own pace', 'Gentle admin and light follow-ups'] },
+      { label: 'Hard nos this phase', items: ['New commitments or negotiations', 'High-pressure client-facing work', 'Evaluating major decisions — wait for follicular'] },
+    ],
+    caution: 'This is biology, not breakdown. The clarity you need for big decisions will return. Write down what you\'re noticing; act on it in follicular.',
+    color: 'var(--rose)',
+    colorPale: 'var(--rose-pale)',
+  },
+};
+
+function updateWeeklyRhythm(day) {
+  const p = getPhaseData(day);
+  const rd = RHYTHM_DATA[p.key] || RHYTHM_DATA.earlyLuteal;
+
+  const chips = document.getElementById('rhythm-phase-chips');
+  if (chips) {
+    chips.innerHTML = `<span class="rhythm-phase-chip" style="background:${rd.colorPale};color:${rd.color};">${p.label}</span>
+      ${p.isPowerWindow ? `<span class="rhythm-phase-chip" style="background:var(--sage-pale);color:var(--sage);">Power Window</span>` : ''}`;
+  }
+
+  const content = document.getElementById('rhythm-content');
+  if (!content) return;
+  let html = '';
+  rd.thisWeek.forEach((block, i) => {
+    if (i > 0) html += '<hr class="rhythm-divider">';
+    html += `<div class="rhythm-task-block">
+      <div class="rhythm-task-label">${block.label}</div>
+      <div class="rhythm-task-items">
+        ${block.items.map(item => `<div class="rhythm-task-item"><span class="rhythm-task-dot">✦</span><span>${item}</span></div>`).join('')}
+      </div>
+    </div>`;
+  });
+  if (rd.caution) {
+    html += `<div class="rhythm-caution" style="margin-top:10px;">${rd.caution}</div>`;
+  }
+  content.innerHTML = html;
+}
+
+// ============================================================
+//  DAILY ROTATING PRACTICE CARDS
+// ============================================================
+const DAILY_CARD_CONTENT = {
+  menstrual: {
+    1:  { title: 'Stillness as intelligence', prompt: 'What truth has been waiting for the quiet to speak?', reflection: 'In menstrual phase, the veil between conscious and subconscious is thinner. What surfaces in stillness today is not random — it is your system completing a cycle of knowing.' },
+    2:  { title: 'The body\'s winter wisdom', prompt: 'What is your body asking for that you keep overriding?', reflection: 'Your Cancer Sun understands something your Aquarius Moon resists: rest is not absence of productivity. It is the soil in which the next cycle\'s work grows.' },
+    3:  { title: 'Journal without agenda', prompt: 'Write three pages before you do anything else. Don\'t edit. Don\'t perform.', reflection: 'Morning pages in menstrual phase are a drain — you are clearing sediment so cleaner water can flow. These are the entries worth keeping.' },
+    4:  { title: 'Warmth as medicine', prompt: 'What would it mean to move through today without forcing anything?', reflection: 'Warmth — in food, in space, in the pace of the day — is not indulgence during menstrual phase. It is the biological requirement for repair.' },
+    5:  { title: 'Releasing what the cycle carried', prompt: 'What from the last 28 days is ready to complete rather than continue?', reflection: 'Day 5 is the threshold. The clarity insights gathered in Days 1–4 are ready to be named before follicular energy begins to move.' },
+  },
+  follicular: {
+    6:  { title: 'New energy, earned slowly', prompt: 'What wants to begin — not force, but begin?', reflection: 'Follicular energy is rising, not arrived. The sacral still leads. What gets a genuine yes today that felt impossible last week?' },
+    7:  { title: 'Brainstorm without committing', prompt: 'If there were no limits, what would Cascade Notary look like in six months?', reflection: 'Follicular is your best window for possibility thinking. The edit comes later. Right now, let the imagination run.' },
+    8:  { title: 'Mercury in Cancer at work', prompt: 'Who needs to hear something from you? What is the most honest way to say it?', reflection: 'Your communication is returning to its full power. Mercury in Cancer writes and speaks from feeling — and in follicular phase, that wellspring is replenishing.' },
+    9:  { title: 'The resume of your real life', prompt: 'What have you built that you haven\'t fully claimed credit for?', reflection: 'Follicular phase is when confidence is most accessible. Name it — the skills, the scope, the outcomes. This is your actual record.' },
+    10: { title: 'Articulation window', prompt: 'Write the pitch you\'ve been afraid to send. Don\'t send it. Just write it.', reflection: 'Days 10–13 are your peak verbal intelligence window. Mercury in Cancer is most articulate here. What needs to be said clearly, finally?' },
+    11: { title: 'Social energy returning', prompt: 'Who in your network is worth reconnecting with right now?', reflection: 'Your Aquarius Moon is most comfortable in follicular phase — connected, engaged, and not yet depleted by the ask. Reach out.' },
+    12: { title: 'What the data shows', prompt: 'Look at your journal entries from the last cycle. What pattern do you see that you hadn\'t named?', reflection: 'Follicular clarity lets you read your own history with less charge. What does the pattern tell you about what you actually need?' },
+    13: { title: 'Before the peak', prompt: 'What is the single most important thing to accomplish before your energy shifts?', reflection: 'Late follicular is the threshold before ovulatory. Name the one thing that matters most so you can meet it with full presence.' },
+  },
+  ovulatory: {
+    14: { title: 'The surge (or its absence)', prompt: 'Check in honestly: is today\'s energy expansive, or is it depleted? Let the answer lead.', reflection: 'Your ovulatory pattern is shifting. The most intelligent move today is to read what is actually here, not what the calendar says should be.' },
+    15: { title: 'If the magnetism is present', prompt: 'Who would benefit from your full presence and attention today?', reflection: 'Ovulatory Venus in Leo is generous and warm. If the energy is here, give it away freely — this is the phase where your care lands most naturally.' },
+    16: { title: 'Symptom tracking as intelligence', prompt: 'Log your physical and emotional state honestly. What does the body report?', reflection: 'You\'re building a multi-cycle picture. Today\'s log is data. Three cycles of data will tell you what one cycle only hints at.' },
+    17: { title: 'Holding plans loosely', prompt: 'What were you supposed to do today that your body is asking you to reconsider?', reflection: 'The most productive thing a Manifesting Generator can do is respond to what is actually happening, not what was planned from a different state.' },
+  },
+  earlyLuteal: {
+    18: { title: 'Your clarity is here', prompt: 'What is the most important thing Cascade Notary needs from you this week?', reflection: 'Early luteal is where your data shows peak clarity. This is not the time to play small or do low-value admin. The focus is here — use it.' },
+    19: { title: 'Detail work and depth', prompt: 'What project has been waiting for you to give it your full, careful attention?', reflection: 'Progesterone\'s calming effect creates a kind of precision that follicular energy doesn\'t have. You see the whole thing and all its parts right now.' },
+    20: { title: 'The home as anchor', prompt: 'What would make your space feel more like yours today?', reflection: 'Cancer Ascendant is genuinely soothed by an ordered, beautiful home. This is not domestic distraction — it is nervous system regulation.' },
+    21: { title: 'Editing and refining', prompt: 'What have you made that needs one more honest pass before it\'s ready?', reflection: 'Early luteal is your best editing phase. The follicular optimism has settled into discernment. What becomes better with your attention right now?' },
+    22: { title: 'The threshold', prompt: 'What can you complete before Day 23? What can you set down without guilt?', reflection: 'Day 22 is the last day of the power window. Protect what matters. Release what was never going to happen this cycle. Both are acts of wisdom.' },
+  },
+  lateLuteal: {
+    23: { title: 'The cliff arrives', prompt: 'What does your body actually need today — not what you planned, but what\'s true?', reflection: 'The hormonal shift is real. Progesterone is declining. This is not you falling apart — this is a physiological reality that asks for structural support, not override.' },
+    24: { title: 'Magnesium and movement', prompt: 'Did you take your magnesium? Did you move gently today?', reflection: 'These are not suggestions. Magnesium glycinate at maximum dose and gentle movement — walking, yoga, lymphatic drainage — are the two most effective interventions for late luteal.' },
+    25: { title: 'The honest journal', prompt: 'What is true right now that you have been trying to outrun?', reflection: 'Mercury in Cancer processes in writing. Days 25–28 entries are often the most honest of the entire cycle. Write without performing.' },
+    26: { title: 'What the withdrawal is asking', prompt: 'Where do you need to be close? Where do you need space? Both are true.', reflection: 'Your Aquarius Moon wants to detach. Your Cancer Sun wants to be held. Tell your husband both. The paradox doesn\'t need to be resolved — it needs to be spoken.' },
+    27: { title: 'No new commitments', prompt: 'What request can wait until next week?', reflection: 'Late luteal decisions are made from a depleted state. The rule is simple: nothing new commits until follicular. This protects you from promising what luteal you cannot sustain.' },
+    28: { title: 'Almost through', prompt: 'What do you want to carry into the next cycle, and what is ready to be released?', reflection: 'Day 28 is preparation. The menstrual clarity is two days away. Name what matters enough to bring forward, and name what the cycle completed.' },
+    29: { title: 'The last day', prompt: 'Rest. What is the smallest, softest version of today that still feels like enough?', reflection: 'Day 29 asks for the minimum viable day — not as failure, but as completion. The new cycle begins when it begins.' },
+  },
+};
+
+function updateDailyCard(day) {
+  const p = getPhaseData(day);
+  const phaseKey = p.key;
+
+  // Map key to content lookup key
+  const contentMap = {
+    menstrual:   DAILY_CARD_CONTENT.menstrual,
+    follicular:  DAILY_CARD_CONTENT.follicular,
+    ovulatory:   DAILY_CARD_CONTENT.ovulatory,
+    earlyLuteal: DAILY_CARD_CONTENT.earlyLuteal,
+    lateLuteal:  DAILY_CARD_CONTENT.lateLuteal,
+  };
+  const phaseContent = contentMap[phaseKey] || DAILY_CARD_CONTENT.earlyLuteal;
+
+  // Find content for this specific day, fallback to first in phase
+  const dayContent = phaseContent[day] || phaseContent[Object.keys(phaseContent)[0]];
+
+  const titleEl = document.getElementById('daily-card-title');
+  const promptEl = document.getElementById('daily-card-prompt');
+  const reflectionEl = document.getElementById('daily-card-reflection');
+  const pillEl = document.getElementById('daily-card-phase-pill');
+
+  if (titleEl) titleEl.textContent = dayContent.title;
+  if (promptEl) promptEl.textContent = '"' + dayContent.prompt + '"';
+  if (reflectionEl) reflectionEl.textContent = dayContent.reflection;
+  if (pillEl) {
+    pillEl.textContent = p.label + ' · Day ' + day;
+    pillEl.style.cssText = p.pillStyle;
+  }
+}
+
+// ============================================================
+//  SIDEBAR / VIEW SWITCHING
+// ============================================================
+const VIEW_META = {
+  dashboard: { title:'', sub:'Here\'s where things stand today.', btn1:'New prompt', btn2:null },
+  journal:   { title:'Journal', sub:'Your daily practice — no editing, no performance.', btn1:'Save entry', btn2:'New prompt' },
+  guide:     { title:'Living Guide', sub:'A map home to yourself.', btn1:'+ New card', btn2:'+ Import text' },
+  cycle:     { title:'Cycle Guide', sub:'Cancer Sun · ruled by the Moon · built for navigating transitions.', btn1:null, btn2:null },
+  goals:     { title:'Goals', sub:'What you are building toward.', btn1:'+ Add goal', btn2:null },
+  finance:   { title:'Finances', sub:'Every dollar working as intentionally as you do.', btn1:'+ Add row', btn2:null },
+  debt:      { title:'Debt Payoff Planner', sub:'Your path to zero.', btn1:'Recalculate', btn2:null },
+};
+
+function switchView(id, el) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  if (id==='dashboard') { const t=document.getElementById('view-title'); if(t) t.textContent=getGreeting(); }
+  if (id==='journal') { syncCycleDayToJournal(); buildRatingRows(); updateJournalDateDisplay(); }
+  document.getElementById('view-'+id).classList.add('active');
+  el.classList.add('active');
+  currentView = id;
+  const m = VIEW_META[id];
+  document.getElementById('view-title').textContent = m.title;
+  document.getElementById('view-sub').textContent = m.sub;
+  const b1 = document.getElementById('header-action-1');
+  const b2 = document.getElementById('header-action-2');
+  if (m.btn1) { b1.textContent=m.btn1; b1.style.display=''; } else { b1.style.display='none'; }
+  if (m.btn2) { b2.textContent=m.btn2; b2.style.display=''; } else { b2.style.display='none'; }
+}
+
+function headerAction1() {
+  if (currentView==='dashboard') cyclePromptDash();
+  else if (currentView==='journal') saveJournalEntry();
+  else if (currentView==='guide') addCardPrompt();
+  else if (currentView==='goals') document.getElementById('new-goal-name') && document.getElementById('new-goal-name').focus();
+  else if (currentView==='finance') document.getElementById('fin-label-in').focus();
+  else if (currentView==='debt') calcDebt();
+}
+function headerAction2() {
+  if (currentView==='journal') cyclePrompt();
+  else if (currentView==='guide') toggleImport();
+}
+
+document.getElementById('sidebar-date').textContent = today.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+
+// ============================================================
+//  JOURNAL PROMPTS
+// ============================================================
+const PROMPTS = [
+  '"What felt heavy this week, and what helped lighten it?"',
+  '"Where did you show up for yourself today — even in a small way?"',
+  '"What are you ready to release, and what are you calling in?"',
+  '"Describe today\'s energy in three words. What shaped it?"',
+  '"What does your body need right now that your mind keeps ignoring?"',
+  '"What would your wisest self tell you about this season of your life?"',
+  '"What is asking to be born in you right now?"',
+  '"Where is your sacral saying yes, even when your mind says it\'s too much?"',
+];
+let promptIdx = S.get('promptIdx', 0);
+
+function cyclePrompt() { promptIdx=(promptIdx+1)%PROMPTS.length; S.set('promptIdx',promptIdx); document.getElementById('journal-prompt-display').textContent=PROMPTS[promptIdx]; }
+function cyclePromptDash() { promptIdx=(promptIdx+1)%PROMPTS.length; S.set('promptIdx',promptIdx); document.getElementById('dash-prompt').textContent=PROMPTS[promptIdx]; }
+
+document.getElementById('journal-prompt-display').textContent = PROMPTS[promptIdx];
+document.getElementById('dash-prompt').textContent = PROMPTS[promptIdx];
+
+// ============================================================
+//  JOURNAL ENTRIES + CHECK-IN
+// ============================================================
+let journalEntries = S.get('journalEntries', []);
+let currentRatings = { mood:0, energy:0, sleep:0, clarity:0, anxiety:0 };
+
+function buildRatingRows() {
+  ['mood','energy','sleep','clarity','anxiety'].forEach(key => {
+    const el = document.getElementById('r-'+key); if(!el) return;
+    el.innerHTML = [1,2,3,4,5].map(n =>
+      `<button class="rating-btn r${n}${currentRatings[key]===n?' active':''}" onclick="setRating('${key}',${n})">${n}</button>`
+    ).join('');
+  });
+}
+
+function setRating(key, val) {
+  currentRatings[key] = currentRatings[key]===val ? 0 : val;
+  buildRatingRows();
+}
+
+function syncCycleDayToJournal() {
+  const day = getCycleDay();
+  const jCycleEl = document.getElementById('j-cycle-day');
+  if (jCycleEl && !jCycleEl.value) {
+    jCycleEl.value = day;
+    updateJournalPhaseLabel(day);
+  }
+}
+
+function updateJournalPhaseLabel(day) {
+  const el = document.getElementById('j-phase-label'); if(!el) return;
+  el.textContent = getCyclePhaseFromDay(day);
+}
+
+function saveJournalEntry() {
+  const ta = document.getElementById('journal-ta');
+  const text = ta.value.trim(); if (!text) return;
+  const cycleDay = +document.getElementById('j-cycle-day').value || null;
+  const symptoms = document.getElementById('j-symptoms').value.trim();
+  const entry = {
+    id: Date.now(),
+    date: new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}),
+    dateObj: new Date().toISOString(),
+    text,
+    prompt: PROMPTS[promptIdx],
+    ratings: {...currentRatings},
+    cycleDay,
+    cyclePhase: getCyclePhaseFromDay(cycleDay),
+    symptoms
+  };
+  if (journalEntries.length && journalEntries[0].text === text) { ta.value=''; return; }
+  journalEntries.unshift(entry);
+  S.set('journalEntries', journalEntries.slice(0,120));
+  clearJournalForm();
+  renderJournalEntries();
+  renderInsights();
+  const entriesBtn = document.querySelector('#journal-tabs .gtab:nth-child(2)');
+  if (entriesBtn) showJTab('entries', entriesBtn);
+}
+
+function clearJournalForm() {
+  const ta = document.getElementById('journal-ta'); if(ta) ta.value='';
+  const sym = document.getElementById('j-symptoms'); if(sym) sym.value='';
+  currentRatings = { mood:0, energy:0, sleep:0, clarity:0, anxiety:0 };
+  buildRatingRows();
+}
+
+function updateJournalDateDisplay() {
+  const el = document.getElementById('j-date-display');
+  if (el) el.textContent = new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+}
+
+const RATING_LABELS = {
+  mood:    ['','Low','Below avg','Average','Good','Great'],
+  energy:  ['','Depleted','Low','Moderate','Good','High'],
+  sleep:   ['','Very poor','Poor','OK','Good','Excellent'],
+  clarity: ['','Foggy','Unclear','Moderate','Clear','Sharp'],
+  anxiety: ['','Calm','Mild','Moderate','High','Very high'],
+};
+const RATING_COLORS = ['','var(--clay)','#C49A6C','var(--bark-light)','var(--sage)','#4A7A5A'];
+
+function ratingPill(key, val) {
+  if (!val) return '';
+  return `<span class="entry-rating-pill" style="border-color:${RATING_COLORS[val]};color:${RATING_COLORS[val]};">${key}: ${val}/5</span>`;
+}
+
+function renderJournalEntries() {
+  const list = document.getElementById('journal-entries-list'); if(!list) return;
+  const search = (document.getElementById('j-search')||{}).value||'';
+  const phaseFilter = (document.getElementById('j-filter-phase')||{}).value||'';
+
+  let filtered = journalEntries;
+  if (search) filtered = filtered.filter(e => e.text.toLowerCase().includes(search.toLowerCase()) || (e.symptoms||'').toLowerCase().includes(search.toLowerCase()));
+  if (phaseFilter) filtered = filtered.filter(e => (e.cyclePhase||'').includes(phaseFilter));
+
+  if (!filtered.length) {
+    list.innerHTML='<p style="font-family:var(--lora);font-style:italic;font-size:13px;color:var(--ink-light);">' + (journalEntries.length ? 'No entries match your filter.' : 'No entries yet — write your first one.') + '</p>';
+    return;
+  }
+
+  list.innerHTML = filtered.map(e => {
+    const hasRatings = e.ratings && Object.values(e.ratings).some(v=>v>0);
+    const ratingHtml = hasRatings ? `<div class="entry-ratings">${['mood','energy','sleep','clarity','anxiety'].map(k=>ratingPill(k,e.ratings[k])).join('')}</div>` : '';
+    const cycleHtml = e.cycleDay ? `<span class="entry-rating-pill">${e.cyclePhase||'Day '+ e.cycleDay} · Day ${e.cycleDay}</span>` : '';
+    const symptomsHtml = e.symptoms ? `<div style="font-family:var(--lora);font-size:12px;color:var(--ink-light);font-style:italic;margin-top:6px;">Symptoms: ${e.symptoms}</div>` : '';
+    return `<div class="entry-card" id="je-${e.id}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+        <div>
+          <div style="font-family:var(--serif);font-size:14px;color:var(--ink);margin-bottom:3px;">${e.date}</div>
+          ${cycleHtml ? `<div style="margin-top:3px;">${cycleHtml}</div>` : ''}
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;flex-shrink:0;margin-left:8px;">
+          <button class="btn btn-ghost btn-sm" style="font-size:11px;padding:3px 9px;" onclick="startEditEntry(${e.id})">Edit</button>
+          <button class="remove-btn" onclick="deleteEntry(${e.id})">✕</button>
+        </div>
+      </div>
+      <div id="je-body-${e.id}" style="font-family:var(--lora);font-size:13px;color:var(--ink-mid);line-height:1.7;">${e.text}</div>
+      ${ratingHtml}
+      ${symptomsHtml}
+      <div id="je-edit-${e.id}" style="display:none;margin-top:10px;">
+        <textarea style="width:100%;background:var(--linen);border:1px solid var(--border-med);border-radius:var(--radius-sm);padding:10px 12px;font-family:var(--lora);font-size:13px;color:var(--ink);line-height:1.7;resize:vertical;height:120px;outline:none;" id="je-ta-${e.id}">${e.text}</textarea>
+        <div style="display:flex;gap:7px;margin-top:7px;justify-content:flex-end;">
+          <button class="btn btn-sm" onclick="cancelEditEntry(${e.id})">Cancel</button>
+          <button class="btn btn-primary btn-sm" onclick="saveEditEntry(${e.id})">Save</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function startEditEntry(id) { document.getElementById('je-body-'+id).style.display='none'; document.getElementById('je-edit-'+id).style.display='block'; }
+function cancelEditEntry(id) { document.getElementById('je-body-'+id).style.display='block'; document.getElementById('je-edit-'+id).style.display='none'; }
+function saveEditEntry(id) {
+  const text = document.getElementById('je-ta-'+id).value.trim(); if(!text) return;
+  const e = journalEntries.find(e=>e.id===id); if(!e) return;
+  e.text = text; S.set('journalEntries', journalEntries); renderJournalEntries();
+}
+function deleteEntry(id) {
+  if (!confirm('Delete this entry?')) return;
+  journalEntries = journalEntries.filter(e=>e.id!==id);
+  S.set('journalEntries', journalEntries); renderJournalEntries(); renderInsights();
+}
+renderJournalEntries();
+
+// ============================================================
+//  JOURNAL TAB SWITCHING
+// ============================================================
+function showJTab(id, btn) {
+  document.querySelectorAll('#jt-write, #jt-entries, #jt-insights').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('#journal-tabs .gtab').forEach(b=>b.classList.remove('active'));
+  const el = document.getElementById('jt-'+id); if(el) el.classList.add('active');
+  btn.classList.add('active');
+  if (id==='write') { syncCycleDayToJournal(); buildRatingRows(); updateJournalDateDisplay(); }
+  if (id==='entries') renderJournalEntries();
+  if (id==='insights') renderInsights();
+}
+
+// ============================================================
+//  INSIGHTS ENGINE
+// ============================================================
+function getEntriesWithRatings() {
+  return journalEntries.filter(e => e.ratings && Object.values(e.ratings).some(v=>v>0));
+}
+
+function avgRating(entries, key) {
+  const vals = entries.map(e=>e.ratings?.[key]).filter(v=>v>0);
+  if (!vals.length) return null;
+  return (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1);
+}
+
+function renderInsights() {
+  renderInsightStats();
+  renderTrendsChart();
+  renderPhaseAverages();
+}
+
+function renderInsightStats() {
+  const el = document.getElementById('insights-stats'); if(!el) return;
+  const rated = getEntriesWithRatings();
+  const stats = [
+    { label:'Entries logged', val:journalEntries.length, sub:'total entries' },
+    { label:'Avg mood (all time)', val:avgRating(rated,'mood') ? avgRating(rated,'mood')+'/5' : '—', sub:rated.length+' rated entries' },
+    { label:'Avg energy (all time)', val:avgRating(rated,'energy') ? avgRating(rated,'energy')+'/5' : '—', sub:'all time' },
+    { label:'Avg sleep (all time)', val:avgRating(rated,'sleep') ? avgRating(rated,'sleep')+'/5' : '—', sub:'all time' },
+    { label:'Avg clarity (all time)', val:avgRating(rated,'clarity') ? avgRating(rated,'clarity')+'/5' : '—', sub:'all time' },
+    { label:'Avg anxiety (all time)', val:avgRating(rated,'anxiety') ? avgRating(rated,'anxiety')+'/5' : '—', sub:'lower is better' },
+  ];
+  el.innerHTML = stats.map(s=>`
+    <div class="insight-stat-card">
+      <div class="insight-stat-lbl">${s.label}</div>
+      <div class="insight-stat-val">${s.val}</div>
+      <div class="insight-stat-sub">${s.sub}</div>
+    </div>`).join('');
+}
+
+function renderTrendsChart() {
+  const el = document.getElementById('trends-chart'); if(!el) return;
+  const rated = getEntriesWithRatings().slice(0,30).reverse();
+  if (!rated.length) { el.innerHTML='<p style="font-family:var(--lora);font-style:italic;font-size:13px;color:var(--ink-light);">Log a few entries with ratings to see your trends here.</p>'; return; }
+
+  const keys = ['mood','energy','sleep','clarity','anxiety'];
+  const colors = { mood:'var(--gold)', energy:'var(--sage)', sleep:'var(--mist)', clarity:'var(--plum)', anxiety:'var(--clay)' };
+  const maxW = Math.max(rated.length * 28, 300);
+
+  let html = `<div style="min-width:${maxW}px;">`;
+  keys.forEach(key => {
+    const avg = avgRating(rated, key);
+    if (!avg) return;
+    html += `<div class="trend-bar-wrap">
+      <span class="trend-label">${key} avg ${avg}</span>
+      <div class="trend-bar-track">
+        <div class="trend-bar-fill" style="width:${(avg/5)*100}%;background:${colors[key]};"></div>
+      </div>
+    </div>`;
+  });
+
+  html += `<div style="margin-top:14px;border-top:1px solid var(--border);padding-top:12px;">
+    <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--ink-light);font-weight:500;margin-bottom:8px;">Mood per entry (oldest → newest)</div>
+    <div style="display:flex;gap:4px;align-items:flex-end;height:40px;">
+      ${rated.map(e => {
+        const v = e.ratings?.mood || 0;
+        const h = v ? Math.round((v/5)*36)+4 : 4;
+        const c = v ? RATING_COLORS[v] : 'var(--linen-dark)';
+        return `<div title="${e.date}: ${v||'—'}/5" style="width:14px;height:${h}px;background:${c};border-radius:3px;flex-shrink:0;transition:height 0.3s;"></div>`;
+      }).join('')}
+    </div>
+  </div>`;
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function renderPhaseAverages() {
+  const el = document.getElementById('phase-averages'); if(!el) return;
+  const rated = getEntriesWithRatings();
+  const phases = ['Follicular','Ovulatory','Early Luteal','Late Luteal','Menstrual'];
+  const phaseColors = { 'Follicular':'var(--mist)','Ovulatory':'var(--gold)','Early Luteal':'var(--clay)','Late Luteal':'var(--rose)','Menstrual':'var(--rose)' };
+
+  if (!rated.filter(e=>e.cyclePhase).length) {
+    el.innerHTML='<p style="font-family:var(--lora);font-style:italic;font-size:13px;color:var(--ink-light);">Log entries with cycle days to see phase-correlated patterns here.</p>';
+    return;
+  }
+
+  el.innerHTML = phases.map(phase => {
+    const phaseEntries = rated.filter(e => e.cyclePhase && (e.cyclePhase.includes(phase.split(' ')[0]) || e.cyclePhase===phase));
+    if (!phaseEntries.length) return '';
+    const color = phaseColors[phase] || 'var(--bark-light)';
+    return `<div class="phase-avg-row">
+      <span class="phase-avg-label" style="color:${color};">${phase}</span>
+      <div class="phase-avg-bars">
+        ${['mood','energy','clarity','anxiety'].map(k => {
+          const avg = avgRating(phaseEntries, k);
+          return avg ? `<span class="phase-mini-bar"><span style="font-weight:500;color:var(--ink-mid);">${k}:</span><span>${avg}</span></span>` : '';
+        }).join('')}
+        <span style="font-size:10.5px;color:var(--ink-light);">(${phaseEntries.length} entries)</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function buildInsightContext() {
+  const rated = getEntriesWithRatings();
+  const recent = journalEntries.slice(0,10);
+  const goals = S.get('goals',[]);
+  const cycleDay = getCycleDay();
+
+  let ctx = 'User: Katie. Cancer Sun, Aquarius Moon, Manifesting Generator. Currently in a career transition, building Cascade Notary business, managing perimenopause symptoms.\n\n';
+  ctx += 'Current cycle day: ' + cycleDay + ' (' + getCyclePhaseFromDay(cycleDay) + ')\n\n';
+  ctx += 'Key pattern from AI analysis: Late luteal and menstrual phases are Katie\'s power windows — mood peaks at 3.5-4.0, anxiety drops to lowest. Ovulatory phase crashed hard in April (mood 1.0, anxiety 4.0) — possible perimenopause shift. Early luteal (days 18-22) is her other high-clarity window.\n\n';
+
+  if (rated.length) {
+    ctx += 'Overall averages from ' + rated.length + ' rated journal entries:\n';
+    ['mood','energy','sleep','clarity','anxiety'].forEach(function(k) {
+      const avg = avgRating(rated, k);
+      if (avg) ctx += '  ' + k + ': ' + avg + '/5\n';
+    });
+    ctx += '\n';
+  }
+
+  const phases = ['Follicular','Ovulatory','Early Luteal','Late Luteal','Menstrual'];
+  const phaseData = phases.map(function(phase) {
+    const pe = rated.filter(function(e) { return e.cyclePhase && (e.cyclePhase.indexOf(phase.split(' ')[0]) >= 0 || e.cyclePhase === phase); });
+    if (!pe.length) return null;
+    return phase + ' (' + pe.length + ' entries): mood ' + (avgRating(pe,'mood')||'—') + ', energy ' + (avgRating(pe,'energy')||'—') + ', anxiety ' + (avgRating(pe,'anxiety')||'—');
+  }).filter(Boolean);
+  if (phaseData.length) ctx += 'Phase averages:\n' + phaseData.map(function(p){ return '  '+p; }).join('\n') + '\n\n';
+
+  if (recent.length) {
+    ctx += 'Recent journal entries (most recent first):\n';
+    recent.forEach(function(e) {
+      ctx += '  [' + e.date + (e.cyclePhase ? ' · ' + e.cyclePhase : '') + '] ' + e.text.substring(0,200) + (e.text.length>200?'…':'') + '\n';
+      if (e.ratings && Object.values(e.ratings).some(function(v){return v>0;})) {
+        const r = e.ratings;
+        ctx += '    Ratings: mood ' + (r.mood||'—') + ' energy ' + (r.energy||'—') + ' sleep ' + (r.sleep||'—') + ' clarity ' + (r.clarity||'—') + ' anxiety ' + (r.anxiety||'—') + '\n';
+      }
+      if (e.symptoms) ctx += '    Symptoms: ' + e.symptoms + '\n';
+    });
+    ctx += '\n';
+  }
+
+  if (goals.length) {
+    ctx += 'Current goals:\n';
+    goals.forEach(function(g) {
+      const pct = Math.round(g.milestones.filter(function(m){return m.done;}).length / Math.max(g.milestones.length,1) * 100);
+      ctx += '  ' + g.name + ' (' + g.cat + '): ' + pct + '% complete\n';
+    });
+  }
+
+  return ctx;
+}
+
+const INSIGHTS_SYS = `You are a perceptive, warm personal analyst integrated into a life-tracking app called Earthwork. You have access to the user's journal entries, mood/energy/sleep/clarity/anxiety ratings, cycle phase data, and goal progress. Your job is to surface patterns, correlations, and insights that the user might not notice themselves — especially around cycle-correlated mood and energy shifts, behavioral patterns, and what the data suggests about their wellbeing. Key known pattern: Katie's late luteal and menstrual phases are her power windows (mood peaks, anxiety lowest), ovulatory phase has been crashing rather than peaking (perimenopause shift), and early luteal (days 18-22) is her other high-clarity window. Be specific and reference actual data when you can. Keep responses warm, grounded, and practical. 2-5 sentences per insight. No bullet lists unless specifically useful. Speak like a wise, observant friend who happens to be great at noticing patterns.`;
+
+async function getWeeklyInsight() {
+  const resp = document.getElementById('insights-ai-resp');
+  const ctx = buildInsightContext();
+  await callAI(INSIGHTS_SYS, ctx + '\n\nPlease give me a brief weekly insight — what patterns stand out in the last 7 days of data, and what would you encourage me to pay attention to this coming week?', resp);
+}
+
+async function getMonthlyInsight() {
+  const resp = document.getElementById('insights-ai-resp');
+  const ctx = buildInsightContext();
+  await callAI(INSIGHTS_SYS, ctx + '\n\nPlease give me a monthly pattern report. Look at how my ratings and journal themes correlate with my cycle phases. What patterns are emerging? What does the data suggest I should adjust in how I structure my time or support myself?', resp);
+}
+
+async function getCustomInsight() {
+  const input = document.getElementById('insights-ai-input');
+  const q = input.value.trim(); if(!q) return;
+  const resp = document.getElementById('insights-ai-resp');
+  const ctx = buildInsightContext();
+  await callAI(INSIGHTS_SYS, ctx + '\n\nUser question: ' + q, resp);
+  input.value = '';
+}
+
+// ============================================================
+//  AI HELPERS
+// ============================================================
+async function callAI(system, userMsg, respEl) {
+  respEl.className = 'ai-response vis';
+  respEl.innerHTML = '<span class="ldots"><span>•</span><span>•</span><span>•</span></span>';
+  try {
+    const res = await fetch('https://earthwork-ai.katbrownfield.workers.dev/', { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ model:'claude-sonnet-4-20250514', max_tokens:1000, system, messages:[{role:'user',content:userMsg}] }) });
+    const data = await res.json();
+    respEl.innerHTML = '✦ ' + (data.content?.[0]?.text || 'Sit with the question — sometimes the answer is already there.');
+  } catch(e) { respEl.innerHTML = 'Could not connect right now — try again in a moment.'; }
+}
+
+const JOURNAL_SYS = 'You are a gentle, grounded journaling companion integrated into a personal life-tracking app called Earthwork. The aesthetic is soft, earthy, and intentional. Keep responses warm, brief (2–4 sentences), and personal. No lists. No markdown. Speak the way a wise, calm friend would. The user is Katie — a Cancer Sun, Aquarius Moon, Manifesting Generator navigating a career transition, building a notary business, and living intentionally in Washougal, WA.';
+const CARD_SYS = 'You are a warm, grounded wellness and life coach companion integrated into a personal living guide app called Earthwork. Answer thoughtfully and concisely — 2 to 4 sentences. No lists, no markdown. Speak like a trusted advisor who knows the user well. The user is Katie — a Cancer Sun, Aquarius Moon, Manifesting Generator.';
+
+function dashAsk() { const q=document.getElementById('dash-ai-input').value.trim(); if(!q)return; callAI(JOURNAL_SYS,q,document.getElementById('dash-ai-resp')); document.getElementById('dash-ai-input').value=''; }
+
+function saveDashJournal() {
+  const ta = document.getElementById('dash-journal-ta');
+  const text = ta.value.trim(); if (!text) return;
+  if (journalEntries.length && journalEntries[0].text === text) { ta.value=''; return; }
+  journalEntries.unshift({ id:Date.now(), date:new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'}), text, prompt:PROMPTS[promptIdx] });
+  S.set('journalEntries', journalEntries.slice(0,60));
+  ta.value='';
+  renderJournalEntries();
+  ta.placeholder='Entry saved ✓ — begin writing again anytime…';
+  setTimeout(()=>{ ta.placeholder='Begin writing… this space is just yours.'; }, 3000);
+}
+function journalAsk() { const q=document.getElementById('journal-ai-input').value.trim(); if(!q)return; callAI(JOURNAL_SYS,q,document.getElementById('journal-ai-resp')); document.getElementById('journal-ai-input').value=''; }
+function cardAskAI() { const q=document.getElementById('m-ai-input').value.trim(); if(!q)return; const card=CARDS.find(c=>c.id===openCardId); callAI(CARD_SYS, `Card: "${card?.title}"\nContent: "${card?.body}"\n\nQuestion: ${q}`, document.getElementById('m-ai-resp')); document.getElementById('m-ai-input').value=''; }
+
+// ============================================================
+//  RITUALS (dashboard)
+// ============================================================
+const DEFAULT_MORNING = [
+  {name:'Sacral scan',time:'3 min'},{name:'Water & electrolytes',time:'—'},{name:'Qi gong',time:'20 min'},
+  {name:'Lymphatic drainage',time:'10 min'},{name:'Morning pages',time:'15 min'},{name:'Outdoor time',time:'20 min'}
+];
+
+let rituals    = S.get('rituals_'+today.toDateString(), DEFAULT_MORNING.map(r=>({...r,done:false})));
+let dailyItems = [];
+let activeChecklist = 'morning';
+
+function renderChecklistItem(r, i, listKey) {
+  return `<div class="ritual-item${r.done?' done':''}" style="position:relative;">
+    <div class="rcheck" onclick="toggleCheckItem('${listKey}',${i})"><div class="rcheck-dot"></div></div>
+    <span class="ritual-name" style="flex:1;" onclick="toggleCheckItem('${listKey}',${i})">${r.name}</span>
+    <span class="ritual-time">${r.time}</span>
+  </div>`;
+}
+
+function showChecklistDetail(listKey, i) {
+  const el = document.getElementById('cd-'+listKey+'-'+i);
+  if (!el) return;
+  el.style.display = el.style.display==='none' ? 'block' : 'none';
+}
+
+function renderRituals() {
+  const morningEl = document.getElementById('dash-rituals');
+  const dailyEl   = document.getElementById('dash-daily');
+  if (morningEl) morningEl.innerHTML = rituals.map((r,i)=>renderChecklistItem(r,i,'morning')).join('');
+  if (dailyEl)   dailyEl.innerHTML   = dailyItems.map((r,i)=>renderChecklistItem(r,i,'daily')).join('');
+  updateChecklistProgress();
+}
+
+function toggleCheckItem(listKey, i) {
+  if (listKey==='morning') {
+    rituals[i].done=!rituals[i].done;
+    S.set('rituals_'+today.toDateString(), rituals);
+  } else {
+    dailyItems[i].done=!dailyItems[i].done;
+    S.set('dailyItems_'+today.toDateString(), dailyItems);
+    const fc = document.getElementById('fc-'+i);
+    const fb = document.getElementById('fb-'+i);
+    if (fc) { if(dailyItems[i].done) fc.classList.add('on'); else fc.classList.remove('on'); }
+    if (fb) { if(dailyItems[i].done) fb.classList.add('done'); else fb.classList.remove('done'); }
+  }
+  renderRituals();
+}
+
+function toggleRitual(i) { toggleCheckItem('morning', i); }
+
+function switchChecklist(tab, btn) {
+  activeChecklist = tab;
+  document.querySelectorAll('.checklist-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('dash-rituals').style.display = tab==='morning' ? '' : 'none';
+  document.getElementById('dash-daily').style.display   = tab==='daily'   ? '' : 'none';
+  updateChecklistProgress();
+}
+
+function updateChecklistProgress() {
+  const prog = document.getElementById('checklist-progress');
+  if (!prog) return;
+  const list = activeChecklist==='morning' ? rituals : dailyItems;
+  const done = list.filter(r=>r.done).length;
+  prog.textContent = `${done} of ${list.length} complete`;
+}
+
+function resetChecklist() {
+  if (activeChecklist==='morning') {
+    rituals = DEFAULT_MORNING.map(r=>({...r,done:false}));
+    S.set('rituals_'+today.toDateString(), rituals);
+  } else {
+    dailyItems = DEFAULT_DAILY.map(r=>({...r,done:false}));
+    S.set('dailyItems_'+today.toDateString(), dailyItems);
+  }
+  renderRituals();
+}
+
+// ============================================================
+//  GOALS
+// ============================================================
+const GOAL_CATS = {
+  career:    { label:'Career',    color:'var(--mist)',  pale:'var(--mist-pale)'  },
+  notary:    { label:'Notary',    color:'var(--clay)',  pale:'var(--clay-pale)'  },
+  financial: { label:'Financial', color:'var(--gold)',  pale:'var(--gold-pale)'  },
+  wellness:  { label:'Wellness',  color:'var(--sage)',  pale:'var(--sage-pale)'  },
+  personal:  { label:'Personal',  color:'var(--plum)',  pale:'var(--plum-pale)'  },
+};
+
+const DEFAULT_GOALS = [
+  {
+    id:1, name:'Find a new job', cat:'career', pct:0,
+    why:'Land a fully remote Director or VP Operations role outside mortgage, with performance bonus, health benefits, and senior-level compensation.',
+    milestones:[
+      {id:101,text:'Resume: reframe mortgage experience into broader ops leadership language',done:true},
+      {id:102,text:'LinkedIn: update headline, about section, and featured content for ops roles',done:true},
+      {id:103,text:'Build target company list — remote-first, outside mortgage, ops-heavy',done:true},
+      {id:104,text:'Identify 3 role types to apply to (VP Ops, Director Ops, Partner Ops)',done:true},
+      {id:105,text:'Submit first 5 tailored applications',done:true},
+      {id:106,text:'Submit 10+ tailored applications total',done:true},
+      {id:107,text:'Respond to all active recruiter outreach within 48 hours',done:false},
+      {id:108,text:'Complete phone screen / first-round interview',done:false},
+      {id:109,text:'Complete second-round or panel interview',done:false},
+      {id:110,text:'Receive a formal written offer',done:false},
+      {id:111,text:'Run offer through your evaluation framework (title, remote, comp, bonus, benefits)',done:false},
+      {id:112,text:'Negotiate — lead with comp, title, and remote non-negotiables',done:false},
+      {id:113,text:'Accept offer in writing',done:false},
+      {id:114,text:'Give notice professionally — protect relationships',done:false},
+      {id:115,text:'First day at new role',done:false},
+    ]
+  },
+  {
+    id:2, name:'Cascade Notary — get RON certified', cat:'notary', pct:0,
+    why:'Complete Washington State notary commission and RON endorsement so you can take remote online notarization jobs from anywhere.',
+    milestones:[
+      {id:201,text:'Confirm WA State notary application has been submitted',done:true},
+      {id:202,text:'Receive notary commission certificate in the mail',done:false},
+      {id:203,text:'Purchase notary bond (required in WA — $10,000 bond, ~$50/year)',done:false},
+      {id:204,text:'File bond with county auditor',done:false},
+      {id:205,text:'Purchase notary E&O insurance (errors & omissions, ~$100-200/year)',done:false},
+      {id:206,text:'Order official notary stamp/seal',done:false},
+      {id:207,text:'Complete RON endorsement application with WA Dept of Licensing',done:false},
+      {id:208,text:'Select RON platform — research Notarize, Nexsys, WetSign, NotaryGadget',done:false},
+      {id:209,text:'Complete identity verification and platform onboarding',done:false},
+      {id:210,text:'Do a test RON session to confirm tech setup works',done:false},
+      {id:211,text:'Create Cascade Notary profile — photo, bio, availability',done:false},
+      {id:212,text:'Take first paid RON assignment',done:false},
+      {id:213,text:'Complete 10 RON sessions and request first reviews',done:false},
+    ]
+  },
+  {
+    id:3, name:'Add LSA — loan signing agent', cat:'notary', pct:0,
+    why:'Layer loan signing agent work on top of your notary credentials. LSA jobs pay $75–200+ per appointment and are the highest-earning notary work.',
+    milestones:[
+      {id:301,text:'Research NNA (National Notary Association) LSA certification requirements',done:false},
+      {id:302,text:'Purchase NNA membership and LSA training course',done:false},
+      {id:303,text:'Complete NNA Signing Agent certification exam',done:false},
+      {id:304,text:'Pass NNA background screening (required by most title companies)',done:false},
+      {id:305,text:'Get laser printer — essential for printing loan packages (Brother HL-L2350DW is reliable)',done:false},
+      {id:306,text:'Assemble signing kit: printer, paper, pens, padfolio, binder clips, sticky notes',done:false},
+      {id:307,text:'Create profiles on Snapdocs, Signing Order, Notary Café, and SigningAgent.com',done:false},
+      {id:308,text:'Set your fee schedule — research local market rates first',done:false},
+      {id:309,text:'Complete first loan signing assignment',done:false},
+      {id:310,text:'Complete 5 signings and collect feedback',done:false},
+      {id:311,text:'Reach out directly to 3 local title companies to introduce Cascade Notary',done:false},
+      {id:312,text:'Complete 25 signings — enough to establish a rating and reputation',done:false},
+      {id:313,text:'Hit first $500 month from signing income',done:false},
+    ]
+  },
+  {
+    id:4, name:'Form LLC and go fully mobile', cat:'notary', pct:0,
+    why:'Once notary and LSA revenue is consistent, formalize Cascade Notary & Signing Service as an LLC and operate as a full mobile business in the Vancouver/Portland metro.',
+    milestones:[
+      {id:401,text:'Hit $1,000/month consistent notary/LSA revenue (LLC formation trigger)',done:false},
+      {id:402,text:'Choose business name — confirm Cascade Notary & Signing Service is available in WA',done:false},
+      {id:403,text:'File LLC Articles of Organization with WA Secretary of State (~$200)',done:false},
+      {id:404,text:'Get EIN (Employer Identification Number) from IRS — free, online, takes 10 min',done:false},
+      {id:405,text:'Open dedicated business checking account',done:false},
+      {id:406,text:'Set up simple bookkeeping — Wave (free) or QuickBooks Self-Employed',done:false},
+      {id:407,text:'Create invoice template with Cascade Notary branding',done:false},
+      {id:408,text:'Get a dedicated business phone number (Google Voice works)',done:false},
+      {id:409,text:'Build a simple one-page website for Cascade Notary',done:false},
+      {id:410,text:'Update all platform profiles to reflect LLC status',done:false},
+      {id:411,text:'Set mileage tracking system for tax deductions (MileIQ or similar)',done:false},
+      {id:412,text:'Launch mobile notary service — advertise in Vancouver/Portland area',done:false},
+      {id:413,text:'Get first client from mobile outreach (not a platform referral)',done:false},
+      {id:414,text:'Hit $2,500/month — enough to call it a real business',done:false},
+    ]
+  },
+  {
+    id:5, name:'Pay off all debt', cat:'financial', pct:0,
+    why:'Zero out all debt using the snowball method — smallest balance first for momentum, with every freed-up minimum rolled into the next one.',
+    milestones:[
+      {id:501,text:'Confirm exact current balances and interest rates for all 3 debts',done:true},
+      {id:502,text:'Set a fixed extra monthly payment amount and protect it like a bill',done:false},
+      {id:503,text:'Update debt tracker in Earthwork each time you make a payment',done:false},
+      {id:504,text:'Pay off Credit Card A completely',done:false},
+      {id:505,text:'Roll Credit Card A minimum into Personal Loan payment',done:false},
+      {id:506,text:'Pay off Personal Loan completely',done:false},
+      {id:507,text:'Roll both freed minimums into Auto Loan payment',done:false},
+      {id:508,text:'Pay off Auto Loan completely',done:false},
+      {id:509,text:'Zero debt — redirect all former debt payments to savings',done:false},
+      {id:510,text:'Celebrate properly. This is a big deal.',done:false},
+    ]
+  },
+];
+
+let goals = S.get('goals', DEFAULT_GOALS);
+let goalNextId = Math.max(...goals.map(g=>g.id), 0) + 1;
+let milestoneNextId = Math.max(...goals.flatMap(g=>g.milestones.map(m=>m.id)), 0) + 1;
+let goalFilter = 'all';
+
+function saveGoals() { S.set('goals', goals); }
+
+function calcGoalPct(g) {
+  if (!g.milestones || !g.milestones.length) return g.pct || 0;
+  return Math.round(g.milestones.filter(m=>m.done).length / g.milestones.length * 100);
+}
+
+function renderGoals() {
+  const dash = document.getElementById('dash-goals');
+  if (dash) {
+    dash.innerHTML = goals.slice(0,4).map((g,i) => {
+      const pct = calcGoalPct(g);
+      const cat = GOAL_CATS[g.cat] || GOAL_CATS.personal;
+      return `<div class="goal-item">
+        <div class="goal-header">
+          <span class="goal-name">${g.name}<span class="goal-tag" style="background:${cat.pale};color:${cat.color};">${cat.label}</span></span>
+          <span class="goal-pct">${pct}%</span>
+        </div>
+        <div class="progress-track"><div class="progress-fill" style="width:${pct}%;background:${cat.color}"></div></div>
+      </div>`;
+    }).join('');
+  }
+
+  const grid = document.getElementById('goals-grid');
+  if (!grid) return;
+  const visible = goalFilter === 'all' ? goals : goals.filter(g=>g.cat===goalFilter);
+  if (!visible.length) { grid.innerHTML = '<div style="color:var(--ink-light);font-family:var(--lora);font-style:italic;font-size:13px;">No goals in this category yet.</div>'; return; }
+
+  grid.innerHTML = visible.map(g => {
+    const pct = calcGoalPct(g);
+    const cat = GOAL_CATS[g.cat] || GOAL_CATS.personal;
+    const doneMilestones = g.milestones.filter(m=>m.done).length;
+    return `<div class="goal-card" id="gc-${g.id}">
+      <div class="goal-card-top">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px;">
+          <span class="goal-tag" style="background:${cat.pale};color:${cat.color};font-size:10px;padding:2px 9px;border-radius:99px;font-weight:500;text-transform:uppercase;letter-spacing:0.07em;">${cat.label}</span>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <span style="font-size:11px;color:var(--ink-light);">${doneMilestones}/${g.milestones.length} steps</span>
+            <button class="remove-btn" onclick="removeGoal(${g.id})">✕</button>
+          </div>
+        </div>
+        <div style="font-family:var(--serif);font-size:16px;font-weight:400;color:var(--ink);margin-bottom:6px;line-height:1.3;">${g.name}</div>
+        ${g.why ? `<div style="font-family:var(--lora);font-style:italic;font-size:12px;color:var(--ink-light);line-height:1.6;margin-bottom:10px;">${g.why}</div>` : ''}
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px;">
+          <div class="progress-track" style="flex:1;"><div class="progress-fill" style="width:${pct}%;background:${cat.color}"></div></div>
+          <span style="font-size:12px;font-weight:500;color:var(--ink-mid);min-width:32px;text-align:right;">${pct}%</span>
+        </div>
+      </div>
+      <div class="goal-card-milestones" id="gm-${g.id}">
+        <div style="font-size:10px;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink-light);font-weight:500;margin-bottom:8px;padding-top:12px;border-top:1px solid var(--border);">Milestones</div>
+        ${g.milestones.map(m=>`
+          <div class="milestone-row${m.done?' done':''}" onclick="toggleMilestone(${g.id},${m.id})">
+            <div class="mcheck${m.done?' on':''}"><div class="mcheck-dot"></div></div>
+            <span class="milestone-text">${m.text}</span>
+          </div>`).join('')}
+        <div style="margin-top:10px;display:flex;gap:7px;">
+          <input class="field-input" id="new-ms-${g.id}" placeholder="Add a milestone…" style="flex:1;font-size:12px;padding:5px 9px;" onkeydown="if(event.key==='Enter')addMilestoneToGoal(${g.id})">
+          <button class="btn btn-sm" style="font-size:11px;padding:5px 10px;" onclick="addMilestoneToGoal(${g.id})">Add</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleMilestone(goalId, msId) {
+  const g = goals.find(g=>g.id===goalId); if(!g) return;
+  const m = g.milestones.find(m=>m.id===msId); if(!m) return;
+  m.done = !m.done;
+  saveGoals(); renderGoals();
+}
+
+function addMilestoneToGoal(goalId) {
+  const input = document.getElementById('new-ms-'+goalId);
+  const text = input.value.trim(); if(!text) return;
+  const g = goals.find(g=>g.id===goalId); if(!g) return;
+  g.milestones.push({id:milestoneNextId++, text, done:false});
+  saveGoals(); renderGoals();
+}
+
+function removeGoal(id) { goals=goals.filter(g=>g.id!==id); saveGoals(); renderGoals(); }
+
+function filterGoals(cat, btn) {
+  document.querySelectorAll('#view-goals .chip').forEach(c=>c.classList.remove('on'));
+  btn.classList.add('on');
+  goalFilter = cat; renderGoals();
+}
+
+function openAddGoalModal() {
+  const name = prompt('Goal name:'); if(!name) return;
+  const why = prompt('What is this goal for? (optional):') || '';
+  const cats = Object.keys(GOAL_CATS);
+  const catLabels = cats.map(c=>GOAL_CATS[c].label).join(' / ');
+  const catRaw = (prompt('Category: ' + catLabels) || 'personal').toLowerCase();
+  const cat = cats.includes(catRaw) ? catRaw : 'personal';
+  goals.push({ id:goalNextId++, name, cat, why, pct:0, milestones:[] });
+  saveGoals(); renderGoals();
+}
+
+(function injectGoalStyles() {
+  const s = document.createElement('style');
+  s.textContent = `
+    .goal-card { background:#fff; border-radius:var(--radius); border:1px solid var(--border); padding:18px 20px; transition:box-shadow 0.2s; }
+    .goal-card:hover { box-shadow:var(--shadow-sm); }
+    .milestone-row { display:flex; align-items:flex-start; gap:9px; padding:7px 0; border-bottom:1px solid var(--border); cursor:pointer; }
+    .milestone-row:last-of-type { border-bottom:none; }
+    .milestone-row.done .milestone-text { color:var(--ink-light); text-decoration:line-through; text-decoration-color:var(--sage-light); }
+    .mcheck { width:16px; height:16px; border-radius:50%; border:1.5px solid var(--border-med); flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all 0.15s; margin-top:2px; }
+    .mcheck.on { background:var(--sage); border-color:var(--sage); }
+    .mcheck-dot { width:5px; height:5px; border-radius:50%; background:#fff; opacity:0; transition:opacity 0.15s; }
+    .mcheck.on .mcheck-dot { opacity:1; }
+    .milestone-text { font-family:var(--lora); font-size:12.5px; color:var(--ink-mid); line-height:1.5; flex:1; }
+  `;
+  document.head.appendChild(s);
+})();
+
+renderGoals();
+
+// ============================================================
+//  FINANCE
+// ============================================================
+let finRows = S.get('finRows', [
+  {id:1,label:'Income',amount:5200,type:'income'},
+  {id:2,label:'Fixed expenses',amount:2840,type:'expense'},
+  {id:3,label:'Variable',amount:1120,type:'expense'},
+]);
+let finNextId = Math.max(...finRows.map(r=>r.id),0)+1;
+let milestones = S.get('milestones',[
+  {id:1,label:'1 month emergency fund',target:3000,saved:1500},
+  {id:2,label:'3 month emergency fund',target:9000,saved:1500},
+]);
+let mileNextId = Math.max(...milestones.map(m=>m.id),0)+1;
+
+function renderFinance() {
+  const totalIn  = finRows.filter(r=>r.type==='income').reduce((s,r)=>s+r.amount,0);
+  const totalOut = finRows.filter(r=>r.type==='expense').reduce((s,r)=>s+r.amount,0);
+  const net = totalIn - totalOut;
+
+  const rows = document.getElementById('fin-rows');
+  if(rows) rows.innerHTML = finRows.map(r=>`
+    <div class="fin-row">
+      <span class="fin-label">${r.label}</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span class="fin-amount ${r.type==='income'?'pos':'neg'}">${r.type==='income'?'+':'–'}$${r.amount.toLocaleString()}</span>
+        <button class="remove-btn" onclick="removeFinRow(${r.id})">✕</button>
+      </div>
+    </div>`).join('') + `<div class="fin-row" style="font-weight:500;"><span class="fin-label">Net</span><span class="fin-amount ${net>=0?'pos':'neg'}">${net>=0?'+':'–'}$${Math.abs(net).toLocaleString()}</span></div>`;
+
+  const dashSavings = document.getElementById('dash-fin-savings');
+  if(dashSavings) {
+    dashSavings.innerHTML = `
+      <div class="savcell"><div class="savcell-lbl">Net this month</div><div class="savcell-val ${net>=0?'pos':'neg'}" style="font-family:var(--serif);font-size:18px;">${net>=0?'+':'–'}$${Math.abs(net).toLocaleString()}</div></div>
+      <div class="savcell"><div class="savcell-lbl">Total income</div><div class="savcell-val" style="font-family:var(--serif);font-size:18px;">$${totalIn.toLocaleString()}</div></div>`;
+  }
+  const dashRows = document.getElementById('dash-fin-rows');
+  if(dashRows) {
+    const preview = finRows.slice(0,4);
+    dashRows.innerHTML = preview.map(r=>`
+      <div class="fin-row">
+        <span class="fin-label">${r.label}</span>
+        <span class="fin-amount ${r.type==='income'?'pos':'neg'}">${r.type==='income'?'+':'–'}$${r.amount.toLocaleString()}</span>
+      </div>`).join('') + `<div class="fin-row" style="font-weight:500;border-top:1px solid var(--border-med);margin-top:4px;padding-top:8px;">
+        <span class="fin-label">Net</span>
+        <span class="fin-amount ${net>=0?'pos':'neg'}">${net>=0?'+':'–'}$${Math.abs(net).toLocaleString()}</span>
+      </div>`;
+  }
+
+  const finSaved = document.getElementById('fin-saved');
+  const finTotal = document.getElementById('fin-total');
+  if(finSaved) finSaved.textContent = '$' + (net>0?net:0).toLocaleString();
+  if(finTotal) finTotal.textContent = '$' + milestones.reduce((s,m)=>s+(m.saved||0),0).toLocaleString();
+
+  const ms = document.getElementById('savings-milestones');
+  if(ms) ms.innerHTML = milestones.map(m=>{
+    const pct=Math.min(100,Math.round((m.saved||0)/m.target*100));
+    return `<div class="goal-item"><div class="goal-header"><span class="goal-name" style="font-size:13px;">${m.label}</span><div style="display:flex;align-items:center;gap:8px;"><span class="goal-pct">$${(m.saved||0).toLocaleString()} / $${m.target.toLocaleString()}</span><button class="remove-btn" onclick="removeMilestone(${m.id})">✕</button></div></div><div class="progress-track"><div class="progress-fill" style="width:${pct}%;background:var(--sage)"></div></div></div>`;
+  }).join('');
+}
+function addFinRow() {
+  const label=document.getElementById('fin-label-in').value.trim(); if(!label)return;
+  finRows.push({id:finNextId++,label,amount:+document.getElementById('fin-amount-in').value||0,type:document.getElementById('fin-type-in').value});
+  S.set('finRows',finRows); renderFinance();
+  document.getElementById('fin-label-in').value=''; document.getElementById('fin-amount-in').value='';
+}
+function removeFinRow(id) { finRows=finRows.filter(r=>r.id!==id); S.set('finRows',finRows); renderFinance(); }
+function addMilestone() {
+  const label=document.getElementById('mile-label').value.trim(); if(!label)return;
+  milestones.push({id:mileNextId++,label,target:+document.getElementById('mile-target').value||1000,saved:0});
+  S.set('milestones',milestones); renderFinance();
+  document.getElementById('mile-label').value=''; document.getElementById('mile-target').value='';
+}
+function removeMilestone(id) { milestones=milestones.filter(m=>m.id!==id); S.set('milestones',milestones); renderFinance(); }
+renderFinance();
+
+// ============================================================
+//  PRACTICE CARDS
+// ============================================================
+let CARDS = S.get('practiceCards', [
+  {id:1,cat:'morning',catLabel:'Morning',title:'The slow morning principle',body:'Before the phone, before the to-do list, before the noise — there is a window. It belongs only to you. Protect it with the same energy you give to everything else. Ten minutes of stillness before engagement sets the tone for the entire day. This is non-negotiable, not a luxury.',tags:['ritual','intention','boundaries']},
+  {id:2,cat:'movement',catLabel:'Movement',title:'Qi gong as a daily anchor',body:'Twenty minutes of qi gong in the morning is not exercise — it is a conversation with your own nervous system. It tells your body: we are safe, we are present, we are beginning gently. On hard days, five minutes still counts. On good days, let it extend as long as it wants to.',tags:['qi gong','nervous system','morning']},
+  {id:3,cat:'movement',catLabel:'Movement',title:'Lymphatic drainage ritual',body:'Ten minutes, every morning if possible. Start at the extremities and move toward the center. Use a dry brush, a gua sha tool, or just your hands. This is not vanity — it is maintenance. The lymphatic system has no pump of its own; it relies entirely on movement and intention.',tags:['lymphatic','body care','morning']},
+  {id:4,cat:'nourishment',catLabel:'Nourishment',title:'Eating with intention, not restriction',body:'The goal is not a perfect diet. It is a thoughtful relationship with food. Ask: does this nourish me, or am I numbing something? Eat slowly when you can. Prioritize protein in the morning. Save the treats for when they are truly celebratory, not habitual.',tags:['food','wellness','intuitive eating']},
+  {id:5,cat:'mindset',catLabel:'Mindset',title:'The ADHD-friendly reframe',body:'Your brain moves fast and needs variety. That is not a flaw — it is a feature that requires the right environment. Break tasks into the smallest possible unit. Change locations when stuck. Use timers, not willpower. You do not need to try harder. You need a smarter container.',tags:['ADHD','focus','systems']},
+  {id:6,cat:'mindset',catLabel:'Mindset',title:'On transitions and becoming',body:'You are allowed to outgrow things — jobs, identities, ways of being. A transition is not a failure of commitment. It is evidence of growth. The discomfort of becoming something new is not a sign that you are doing it wrong. It is the friction of the old skin coming off.',tags:['transition','growth','identity']},
+  {id:7,cat:'evening',catLabel:'Evening',title:'The wind-down sequence',body:'An hour before sleep: screens dimmed or off. Something warm to drink. A brief review of the day without judgment — three things that went well, one thing to release. Then something physical and gentle: stretching, a slow walk, or simply lying down and breathing until your body remembers how to be still.',tags:['sleep','ritual','reflection']},
+  {id:8,cat:'wellness',catLabel:'Wellness',title:'Terpenes and nervous system care',body:'Specific terpenes work differently on the nervous system. Myrcene and linalool for settling and sleep. Limonene for elevation and motivation. Pinene for focus and clarity. Know what you are reaching for and why. This is a toolkit, and like any toolkit it works best when used with intention and knowledge.',tags:['terpenes','cannabis','wellness']},
+  {id:9,cat:'morning',catLabel:'Morning',title:'Morning pages practice',body:'Three pages, longhand, first thing. No editing, no re-reading, no performance. Just the raw output of your mind before the day shapes it. This is not journaling for posterity. It is a drain — you are clearing the sediment so that the cleaner water beneath can flow.',tags:['writing','clarity','morning']},
+  {id:10,cat:'nourishment',catLabel:'Nourishment',title:'Tinned fish as a ritual',body:'Sardines, mackerel, smoked salmon — these are omega-3 dense, mineral-rich, and genuinely satisfying. Three to five times a week, tinned fish on a beautiful plate with good olive oil and something crunchy is a complete act of nourishment. Treat it like one.',tags:['nutrition','omega-3']},
+  {id:11,cat:'mindset',catLabel:'Mindset',title:'Sacral authority in practice',body:'Your gut response — that immediate yes or no in the body before the mind explains it — is your most reliable compass. When you override it with logic or obligation, you end up drained and resentful. When you honor it, even imperfectly, the work feels good. This is not woo. This is your operating system.',tags:['human design','sacral','decisions']},
+  {id:12,cat:'wellness',catLabel:'Wellness',title:'Perimenopause is not a breakdown',body:'The symptoms — disrupted sleep, mood volatility, energy crashes, brain fog — are all downstream effects of declining progesterone and erratic estrogen. They are real, physiological, and manageable. They are not signs that you are less capable. They are signals that your body is asking for more intentional tending. You were built for navigating transitions through attunement rather than force.',tags:['perimenopause','hormones','body literacy']},
+]);
+let activeCardFilter = 'all';
+
+function renderCards() {
+  const grid = document.getElementById('cards-grid'); if(!grid)return;
+  grid.innerHTML='';
+  const visible = activeCardFilter==='all' ? CARDS : CARDS.filter(c=>c.cat===activeCardFilter);
+  visible.forEach(card => {
+    const wrap = document.createElement('div');
+    wrap.className='flip-wrap'; wrap.id='fw-'+card.id;
+    wrap.innerHTML=`<div class="flip-inner"><div class="flip-front"><span class="cat-pill cat-${card.cat}">${card.catLabel}</span><div class="card-front-title">${card.title}</div><div class="card-front-preview">${card.body}</div><div class="card-front-hint">↗ Tap to read · double-tap to flip</div></div><div class="flip-back"><span class="cat-pill cat-${card.cat}">${card.catLabel}</span><div class="card-back-body">${card.body}</div><div class="card-back-tags">${card.tags.map(t=>`<span class="tag">${t}</span>`).join('')}</div></div></div>`;
+    let clicks=0;
+    wrap.onclick=()=>{ clicks++; setTimeout(()=>{ if(clicks===1)openCardModal(card.id); else wrap.classList.toggle('flipped'); clicks=0; },220); };
+    grid.appendChild(wrap);
+  });
+  const add=document.createElement('div');
+  add.className='add-card'; add.innerHTML='<span style="font-size:18px">+</span><span>Add a card</span>'; add.onclick=addCardPrompt;
+  grid.appendChild(add);
+}
+
+function filterCards(cat,btn) {
+  document.querySelectorAll('.chip').forEach(c=>c.classList.remove('on'));
+  btn.classList.add('on'); activeCardFilter=cat; renderCards();
+}
+
+function openCardModal(id) {
+  const card=CARDS.find(c=>c.id===id); if(!card)return;
+  openCardId=id;
+  document.getElementById('m-cat').innerHTML=`<span class="cat-pill cat-${card.cat}">${card.catLabel}</span>`;
+  document.getElementById('m-title').textContent=card.title;
+  document.getElementById('m-body').textContent=card.body;
+  document.getElementById('m-ai-input').value='';
+  document.getElementById('m-ai-resp').className='ai-response';
+  document.getElementById('card-modal').classList.add('open');
+}
+function closeCardModal(e){if(e.target===document.getElementById('card-modal'))closeCardModalDirect();}
+function closeCardModalDirect(){document.getElementById('card-modal').classList.remove('open');}
+
+function toggleImport(){document.getElementById('import-panel').classList.toggle('hidden');}
+async function processImport(){
+  const text=document.getElementById('import-ta').value.trim(); if(!text)return;
+  const st=document.getElementById('import-status'); st.style.display='block'; st.textContent='Reading and organizing into cards…';
+  try{
+    const res=await fetch('https://earthwork-ai.katbrownfield.workers.dev/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:'Organize personal living guide text into practice cards. Extract 2–5 themes. Return ONLY a valid JSON array, no markdown fences. Each item: {"cat":"one of [morning,nourishment,movement,mindset,evening,wellness]","catLabel":"display label","title":"evocative title max 6 words","body":"2–4 warm sentences","tags":["2-3 lowercase strings"]}',messages:[{role:'user',content:text}]})});
+    const data=await res.json();
+    const raw=data.content?.[0]?.text||'[]';
+    const newCards=JSON.parse(raw.replace(/```json|```/g,'').trim());
+    newCards.forEach(c=>{c.id=cardNextId++;});
+    CARDS=[...CARDS,...newCards];
+    S.set('practiceCards',CARDS);
+    st.textContent=`${newCards.length} card${newCards.length!==1?'s':''} added.`;
+    renderCards(); document.getElementById('import-ta').value='';
+    setTimeout(()=>{toggleImport();st.style.display='none';},2000);
+  } catch(e){st.textContent='Something went wrong — try again.';}
+}
+
+function addCardPrompt(){
+  const title=prompt('Card title:'); if(!title)return;
+  const body=prompt('Content for this card:'); if(!body)return;
+  const CATS=['morning','nourishment','movement','mindset','evening','wellness'];
+  const LABELS=['Morning','Nourishment','Movement','Mindset','Evening','Wellness'];
+  const ci=(prompt('Category: morning / nourishment / movement / mindset / evening / wellness')||'wellness').toLowerCase();
+  const idx=CATS.indexOf(ci)>=0?CATS.indexOf(ci):5;
+  CARDS.push({id:cardNextId++,cat:CATS[idx],catLabel:LABELS[idx],title,body,tags:[]});
+  S.set('practiceCards',CARDS); renderCards();
+}
+renderCards();
+
+// ============================================================
+//  DAILY FLOW
+// ============================================================
+const FLOW=[
+  {time:'6:00–6:20am',name:'Wake & Ground',mins:20,detail:'Stay in bed 2–3 minutes and run your sacral scan. Ask yes/no questions about the week. Drink 12–16oz water with sea salt and lemon. Step outside briefly to receive morning light — resets cortisol and supports your circadian rhythm.'},
+  {time:'6:20–6:50am',name:'Movement',mins:30,detail:'30 minutes of moderate rhythmic movement — a walk, elliptical, or yoga flow. Mars in Capricorn Retrograde does best with consistent, non-competitive exercise. This is not performance; it is maintenance of the engine.'},
+  {time:'6:50–7:15am',name:'Morning Self-Care',mins:25,detail:'Shower, skincare, oral care. Give yourself permission to be unhurried here. Your Cancer Ascendant means the way you feel in your body directly affects how you show up in every interaction today.'},
+  {time:'7:15–7:45am',name:'Breakfast',mins:30,detail:'Prioritize protein and fat: eggs with avocado, smoked salmon with cream cheese, or a protein-rich smoothie. No scrolling during breakfast. Mercury in Cancer asks you to digest slowly — both food and information.'},
+  {time:'7:45–9:00am',name:'Deep Work Block 1',mins:75,detail:'Your most cognitively demanding task of the day. Mercury in Cancer performs at its sharpest in the morning before emotional input accumulates. Use this window for strategy, writing, decision-making, or job search applications.'},
+  {time:'9:00–9:15am',name:'Micro Break',mins:15,detail:'Step away from the screen. Walk to the kitchen, stand outside, do a brief stretch. Manifesting Generators need transition time between focus blocks to reset without burning through sacral energy.'},
+  {time:'9:15–11:00am',name:'Work Block 2',mins:105,detail:'Communications, collaborative tasks, follow-ups. For Cascade Notary or job search: platform signups, email outreach, LinkedIn updates, or document prep.'},
+  {time:'11:00–11:30am',name:'Outdoor Time',mins:30,detail:'Even 20 minutes outdoors dramatically improves afternoon energy. Cancer Sun is regulated by natural cycles; fresh air is medicine. Walk around the block, sit in the yard, or drive somewhere with trees or water.'},
+  {time:'11:30am–12:30pm',name:'Creative Block',mins:60,detail:'Journaling, vision boarding, designing something for the notary business, exploring an aesthetic direction, or writing a LinkedIn post. Jupiter in Pisces needs this outlet to stay energetically solvent.'},
+  {time:'12:30–1:15pm',name:'Lunch',mins:45,detail:'Warm, nourishing meal. Avoid eating at your desk. Cancer Sun literally digests better when you feel safe and unhurried. A proper lunch break is a biological necessity for your energy type.'},
+  {time:'1:15–3:00pm',name:'Admin & Operations',mins:105,detail:'Afternoon is suited for operational and administrative tasks: email triage, scheduling, process documentation, follow-up communications. Your Aquarius Moon is at home in systemic thinking.'},
+  {time:'3:00–3:30pm',name:'Afternoon Recharge',mins:30,detail:'Coffee or tea, a small snack if needed, and 15–20 minutes of low-stimulation rest. For a Manifesting Generator, this is often the daily energy dip. Honor it rather than push through it.'},
+  {time:'3:30–5:00pm',name:'Professional Development',mins:90,detail:'Professional reading, industry research, continuing education, or intentional networking. This block is also excellent for Cascade Notary business development.'},
+  {time:'5:00–6:00pm',name:'Outside & Nature Time',mins:60,detail:'A dedicated outdoor session. Walks near water, the Columbia River, or the woods around Washougal are ideal for Cancer Sun regulation. Bring your husband if schedules allow — easy, low-key connection.'},
+  {time:'6:00–7:00pm',name:'Family & Husband Time',mins:60,detail:'Fully present time with your husband. Cook together, talk over the day, or simply be in the same space without task orientation. Cancer Sun + Venus in Leo both crave warm presence in the home.'},
+];
+
+function fmtTime(s){return Math.floor(s/60)+':'+(s%60<10?'0':'')+s%60;}
+
+const DEFAULT_DAILY = FLOW.map(f=>({name:f.name, time:f.time, done:false}));
+dailyItems = S.get('dailyItems_'+today.toDateString(), DEFAULT_DAILY.map(r=>({...r,done:false})));
+renderRituals();
+
+function buildDaySelector(){
+  const sel=document.getElementById('day-selector'); if(!sel)return;
+  sel.innerHTML='';
+  const todayIdx=today.getDay();
+  DAYS_SHORT.forEach((d,i)=>{
+    const btn=document.createElement('button');
+    btn.className='day-btn'+(i===1?' active':'');
+    btn.textContent=d;
+    btn.onclick=()=>{
+      document.querySelectorAll('.day-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('flow-day-label').textContent=DAYS_LONG[i];
+      buildFlowList();
+    };
+    sel.appendChild(btn);
+  });
+}
+
+function buildFlowList(){
+  Object.values(timers).forEach(t=>{if(t&&t.interval)clearInterval(t.interval);}); timers={};
+  const list=document.getElementById('flow-list'); if(!list)return;
+  list.innerHTML='';
+  FLOW.forEach((block,i)=>{
+    const isDone = dailyItems[i] ? dailyItems[i].done : false;
+    const el=document.createElement('div');
+    el.className='flow-block'+(isDone?' done':''); el.id='fb-'+i;
+    el.innerHTML=`<div class="flow-top" onclick="toggleFB(${i})"><div class="fcheck${isDone?' on':''}" id="fc-${i}" onclick="event.stopPropagation();markFDone(${i})"><div class="fcheck-dot"></div></div><div class="flow-time">${block.time}</div><div class="flow-name">${block.name}</div><div class="flow-dur">${block.mins} min</div><div class="flow-chev">▾</div></div><div class="flow-detail"><div class="flow-detail-body">${block.detail}</div><div class="timer-row"><div class="timer-display" id="td-${i}">${fmtTime(block.mins*60)}</div><div class="tbar-wrap"><div class="tbar" id="tb-${i}"></div></div><button class="btn btn-primary btn-sm" id="tbtn-${i}" onclick="toggleTimer(${i},${block.mins*60})">Start</button><button class="btn btn-sm" onclick="resetTimer(${i},${block.mins*60})">Reset</button></div></div>`;
+    list.appendChild(el);
+  });
+}
+
+function toggleFB(i){document.getElementById('fb-'+i).classList.toggle('open');}
+function markFDone(i){
+  document.getElementById('fc-'+i).classList.toggle('on');
+  document.getElementById('fb-'+i).classList.toggle('done');
+  if (dailyItems[i] !== undefined) {
+    dailyItems[i].done = document.getElementById('fc-'+i).classList.contains('on');
+    S.set('dailyItems_'+today.toDateString(), dailyItems);
+    renderRituals();
+  }
+}
+
+function toggleTimer(i,total){
+  const btn=document.getElementById('tbtn-'+i); const block=document.getElementById('fb-'+i);
+  if(timers[i]&&timers[i].running){clearInterval(timers[i].interval);timers[i].running=false;btn.textContent='Resume';btn.className='btn btn-primary btn-sm';block.classList.remove('running');}
+  else{
+    if(!timers[i])timers[i]={remaining:total,total,running:false};
+    timers[i].running=true; block.classList.add('running'); btn.textContent='Pause'; btn.className='btn btn-sm';
+    timers[i].interval=setInterval(()=>{
+      timers[i].remaining--;
+      document.getElementById('td-'+i).textContent=fmtTime(Math.max(0,timers[i].remaining));
+      document.getElementById('tb-'+i).style.width=Math.round((1-timers[i].remaining/timers[i].total)*100)+'%';
+      if(timers[i].remaining<=0){clearInterval(timers[i].interval);timers[i].running=false;btn.textContent='✓ Done';btn.className='btn btn-sm';block.classList.remove('running');document.getElementById('fc-'+i).classList.add('on');block.classList.add('done');}
+    },1000);
+  }
+}
+function resetTimer(i,total){if(timers[i])clearInterval(timers[i].interval);timers[i]=null;document.getElementById('td-'+i).textContent=fmtTime(total);document.getElementById('tb-'+i).style.width='0%';document.getElementById('tbtn-'+i).textContent='Start';document.getElementById('tbtn-'+i).className='btn btn-primary btn-sm';document.getElementById('fb-'+i).classList.remove('running');}
+
+buildDaySelector(); buildFlowList();
+
+// ============================================================
+//  ANCHORS
+// ============================================================
+const ANCHORS=[
+  {color:'var(--mist)',name:'Morning Sacral Scan',why:'As a Manifesting Generator, your day goes better when you check in with your body\'s yes/no before your mind makes a plan. 2–3 minutes in bed before rising.'},
+  {color:'var(--sage)',name:'Water & Electrolytes First',why:'Cancer rules the body\'s fluid systems. 12–16oz with sea salt and lemon before anything else. Your nervous system processes better when you begin watered.'},
+  {color:'var(--clay)',name:'Movement of Some Kind',why:'Mars in Capricorn Retrograde requires physical release. If the body doesn\'t move, the energy turns inward and becomes anxiety. Even 10 minutes counts.'},
+  {color:'var(--plum)',name:'Creative or Intuitive Outlet',why:'Jupiter in Pisces is an expansion engine that runs on imagination. Without a creative channel each day, your mind will find less helpful ways to wander.'},
+  {color:'var(--gold)',name:'Something Beautiful or Nature',why:'Venus in Leo + Cancer Ascendant together create someone whose nervous system genuinely calms when there is something beautiful to rest your eyes on. A candle counts.'},
+  {color:'var(--bark-light)',name:'Connection Check-In',why:'Cancer Sun + Aquarius Moon means you need both intimacy and community. A brief intentional moment — even a text — prevents the slow drift into isolation your Aquarius Moon can fall into.'},
+  {color:'var(--rose)',name:'Wind-Down Without Screens',why:'Mercury in Cancer needs quiet to process. Your emotional intelligence consolidates during transition time. Even 20 screen-free minutes before sleep changes the quality of your rest.'},
+  {color:'var(--sage-light)',name:'Gratitude or Reflection Note',why:'Pluto in Scorpio + Cancer Sun both benefit from conscious acknowledgment of what is transforming. A single written sentence at the end of the day closes loops the subconscious would otherwise keep running.'},
+];
+function buildAnchors(){const list=document.getElementById('anchors-list');if(!list)return;list.innerHTML=ANCHORS.map(a=>`<div class="anchor-row"><div class="anchor-dot" style="background:${a.color}"></div><div class="anchor-name">${a.name}</div><div class="anchor-why">${a.why}</div></div>`).join('');}
+buildAnchors();
+
+// ============================================================
+//  CYCLE GUIDE — updated with corrected phase intelligence
+// ============================================================
+const PHASES=[
+  {id:'follicular',cls:'pf',tag:'Days 6–13',title:'Follicular — Inner Spring',sub:'Estrogen rising · Rebuilding energy · Anxiety can spike here',note:'Mercury in Cancer is at its most articulate in late follicular (Days 10–13). Schedule your most ambitious career conversations and proposals here. Watch for anxiety spiking from the job-search waiting and uncertainty — this is the phase pattern, not a reflection of your actual circumstances.',bullets:['Schedule ambitious career conversations and applications in Days 10–13. Your verbal confidence peaks here.','Start new projects and brainstorm Cascade Notary strategy — follicular is your best window for fresh thinking.','Your data shows follicular anxiety tends to be highest. The waiting feels loudest right now. That is the phase, not the reality.','Increase workout intensity — follicular is your strongest phase for starting new fitness habits.']},
+  {id:'ovulatory',cls:'po',tag:'Days 14–17',title:'Ovulatory — Watch for the shift',sub:'May surge · May crash · Track carefully this cycle',note:'Your April 29th data flagged a pattern: mood 1.0, anxiety 4.0, body "GARBAGE" — during what should have been peak energy. This is consistent with perimenopause hormonal shifts. Your ovulatory surge may be becoming a depletion point. Track this cycle carefully and have a rest protocol ready if the crash arrives.',bullets:['If the surge is here: book interviews, negotiations, high-visibility calls. Your magnetism and verbal fluency are at their highest.','If the crash arrives instead: reduce output expectations immediately. This is physiological, not character.','Log your symptoms each cycle day 14–17: mood, energy, body sensations. Three cycles will reveal the full pattern.','Watch for over-commitment even on surge days. Your sacral authority still leads.']},
+  {id:'earlyLuteal',cls:'pl',tag:'Days 18–22',title:'Early Luteal — Your power window',sub:'Your data shows peak clarity here · Business development window',note:'Your AI analysis of your journal data revealed something important: early luteal (days 18–22) is one of your genuine power windows. Mood is climbing, clarity is high, anxiety is manageable. This is where the most demanding Cascade Notary business development belongs — not follicular, not ovulatory.',bullets:['This is your business development window. Cascade Notary outreach, rate strategy, platform work — do it now.','Tackle detail-intensive work: editing, auditing, organizing, deep admin that requires precision.','Deep clean and order your home — Cancer Ascendant is genuinely soothed by ordered space and you have the energy to do it right.','Start winding down ambitious scheduling by Day 22. The hormonal cliff arrives around Day 23.']},
+  {id:'lateLuteal',cls:'pl',tag:'Days 23–29',title:'Late Luteal — Protect and nourish',sub:'Biology, not breakdown · Journal window · No new commitments',note:'Late luteal is where your Aquarius Moon\'s shadow appears: detachment, irritability, wanting to withdraw and simultaneous loneliness. Tell your husband: "I need to be close and I also need you to not take my quietness personally right now." That sentence is worth more than any self-management strategy.',bullets:['No new commitments, negotiations, or major decisions. This is biochemistry, not you.','Journal specifically in Days 25–28. Mercury in Cancer processes by writing. These entries often hold your most honest thinking.','Magnesium to maximum dose. Replace intense exercise with walking, yoga, gentle strength work.','Dark chocolate (85%+) is medicine. Warmth, low stimulation, early evenings.']},
+  {id:'menstrual',cls:'pm',tag:'Days 1–5',title:'Menstrual — Your clarity peak',sub:'Your data shows mood peaks here · Anxiety at its lowest · Power window',note:'Your journal data confirms what most frameworks get backwards: your late luteal and menstrual phases are your sweet spots — mood peaks at 3.5–4.0, anxiety drops to its lowest. The slower, more introspective energy is where your system finds its deepest clarity. This is not rest as recovery. This is rest as strategy.',bullets:['High-clarity solo work belongs here: strategic thinking, deep writing, reflection, naming what matters.','Rest without guilt. Cancel what can be cancelled. Your Aquarius Moon will resist appearing low-functioning — let your Cancer Sun lead.','Journal and reflect. Insights surfacing in Days 1–5 are disproportionately truthful. Record them; act in follicular.','Prioritize warmth, broths, warming foods. Gentle movement only.']},
+];
+function buildCycle(){const grid=document.getElementById('phase-grid');if(!grid)return;PHASES.forEach(p=>{const el=document.createElement('div');el.className='phase-card '+p.cls+(p.id==='menstrual'||p.id==='earlyLuteal'||p.id==='lateLuteal'?' power-window':'');el.id='phase-'+p.id;el.onclick=()=>el.classList.toggle('open');el.innerHTML=`<div class="phase-tag">${p.tag}</div><div class="phase-title">${p.title}${(p.id==='menstrual'||p.id==='earlyLuteal')?'<span class="power-badge">Power Window</span>':''}</div><div class="phase-sub">${p.sub}</div><div class="phase-body">${p.bullets.map(b=>`<div class="pbullet"><span class="pbdot">✦</span>${b}</div>`).join('')}<div class="chart-note"><div class="chart-note-lbl">Chart note</div>${p.note}</div></div>`;grid.appendChild(el);});}
+
+function setCyclePhase(day){
+  let phase,label,bg,col;
+  if(day>=1&&day<=5){phase='Menstrual';label='Inner Winter — your clarity peak';bg='var(--rose-pale)';col='var(--rose)';}
+  else if(day>=6&&day<=13){phase='Follicular';label='Inner Spring — energy rebuilding';bg='var(--mist-pale)';col='var(--mist)';}
+  else if(day>=14&&day<=17){phase='Ovulatory';label='Watch for surge or crash';bg='var(--gold-pale)';col='var(--bark)';}
+  else if(day>=18&&day<=22){phase='Early Luteal';label='Your power window — high clarity';bg='var(--clay-pale)';col='var(--clay)';}
+  else{phase='Late Luteal';label='Protect and nourish';bg='var(--rose-pale)';col='var(--rose)';}
+  const badge=document.getElementById('cycle-badge');
+  if(badge){badge.style.cssText=`background:${bg};color:${col};padding:4px 12px;border-radius:99px;font-size:12px;font-weight:500;font-family:var(--sans);`;badge.textContent=phase;}
+  const lbl=document.getElementById('cycle-phase-lbl');
+  if(lbl) lbl.textContent=label;
+}
+
+function showGTab(id,btn){document.querySelectorAll('.gsection').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.gtab').forEach(b=>b.classList.remove('active'));document.getElementById('gsec-'+id).classList.add('active');btn.classList.add('active');}
+buildCycle(); setCyclePhase(getCycleDay());
+
+// ============================================================
+//  BLUEPRINT
+// ============================================================
+const HD_CARDS=[{label:'Human Design Type',value:'Manifesting Generator',note:'Strategy: Respond, then Inform. Your energy fires in response to what resonates and flatlines when you force things.'},{label:'Authority',value:'Sacral — Gut Response',note:'Your immediate yes or no before the mind explains it is your most reliable compass. Trusting it over mental override is one of your great life assignments.'},{label:'Profile',value:'2/4 — Hermit / Opportunist',note:'You need deep alone time to access your natural gifts, yet your opportunities come through your network and existing relationships.'},{label:'Theme',value:'Frustration → Satisfaction',note:'Frustration is the signal you are initiating rather than responding. Satisfaction is the confirmation you are in alignment.'}];
+const PLACEMENTS=[{pill:'Sun',cls:'p-can',title:'Sun in Cancer 2°12\' — Core Identity',body:'You are here to nurture, protect, and build something that endures. Your work becomes your sanctuary, your relationships become your roots. You feel most alive when what you do is meaningful to the people you love.'},{pill:'Moon',cls:'p-aqu',title:'Moon in Aquarius — Emotional Processing',body:'Your inner world is ruled by paradox: you feel deeply but crave distance. The Aquarius Moon needs space to observe before it can feel safe. Your wellbeing depends on having both close intimacy and room to breathe.'},{pill:'Mercury',cls:'p-can',title:'Mercury in Cancer 27°27\' — Communication & Mind',body:'You think with your whole body. In professional settings, your ability to frame operational information through a human lens is your superpower. You do not separate logic from feeling, and this is a gift, not a limitation.'},{pill:'Venus',cls:'p-leo',title:'Venus in Leo 9°37\' — Love, Beauty & Values',body:'You love big, generously, and with creative flair. You light up in environments that feel beautiful and intentional. Creating beauty in your space is not aesthetic vanity — it is a biological function for your chart.'},{pill:'Mars ℞',cls:'p-cap',title:'Mars in Capricorn Retrograde — Drive & Action',body:'Your drive is strategic, enduring, and goal-oriented. Your energy works best when you are pursuing something deeply personal rather than externally assigned. Rest is not weakness for you — it is part of the engine.'},{pill:'Jupiter',cls:'p-pis',title:'Jupiter in Pisces — Growth & Expansion',body:'Your capacity for empathy, imagination, and spiritual attunement is one of your most expansive resources. You grow through surrender, through trust, and through following what feels like a current rather than a plan.'},{pill:'Saturn',cls:'p-sag',title:'Saturn & Uranus in Sagittarius — Structure & Liberation',body:'You were born to build your philosophy rather than merely inherit it. You are not meant to do things the way they have always been done. You are meant to be the evidence that a better way exists.'},{pill:'Pluto',cls:'p-sco',title:'Pluto in Scorpio — Transformation',body:'Deep, cyclical transformation is woven into your generational code. You are not afraid of endings. This is the energy underneath your career reinventions, your relationship depth, and your pull toward esoteric understanding.'}];
+function buildBlueprint(){const hg=document.getElementById('hd-grid');if(hg)hg.innerHTML=HD_CARDS.map(c=>`<div class="hd-card"><div class="hd-label">${c.label}</div><div class="hd-value">${c.value}</div><div class="hd-note">${c.note}</div></div>`).join('');const pl=document.getElementById('placement-list');if(pl)PLACEMENTS.forEach((p,i)=>{const el=document.createElement('div');el.className='placement-card';el.id='pc-'+i;el.innerHTML=`<div class="placement-hdr" onclick="this.closest('.placement-card').classList.toggle('open')"><span class="planet-pill ${p.cls}">${p.pill}</span><div class="placement-title">${p.title}</div><span style="font-size:11px;color:var(--ink-light);">▾</span></div><div class="placement-body">${p.body}</div>`;pl.appendChild(el);});}
+buildBlueprint();
+
+// ============================================================
+//  SUPPLEMENTS
+// ============================================================
+const SUPPS=[{name:'Magnesium glycinate',timing:'At night — max dose in late luteal'},{name:'CoQ10',timing:'Daily with breakfast'},{name:'Vitamin D3',timing:'With a fat-containing meal'},{name:'Ashwagandha',timing:'Morning — shift to evening-only in late luteal'},{name:'Choline',timing:'Daily with breakfast — critical in late luteal'},{name:'Fish oil / Omega-3',timing:'Daily — slightly higher in luteal phase'},{name:'B6',timing:'Consider 50mg in late luteal if multivitamin is low'},{name:'Bone broth or collagen',timing:'Daily'},{name:'Electrolytes',timing:'First thing with morning water'}];
+let suppState = S.get('suppState_'+today.toDateString(), {});
+function buildSupps(){
+  const list=document.getElementById('supp-list'); if(!list)return;
+  list.innerHTML=SUPPS.map((s,i)=>`
+    <div class="supp-row">
+      <div class="supp-chk${suppState[i]?' on':''}" id="sc-${i}" onclick="toggleSupp(${i})">${suppState[i]?'✓':''}</div>
+      <div style="margin-left:9px;flex:1;">
+        <div class="supp-name">${s.name}</div>
+        <div class="supp-timing">${s.timing}</div>
+      </div>
+    </div>`).join('');
+  const done=SUPPS.filter((_,i)=>suppState[i]).length;
+  const prog=document.getElementById('supp-progress');
+  if(prog) prog.textContent=done+' of '+SUPPS.length+' taken';
+}
+function toggleSupp(i){suppState[i]=!suppState[i];S.set('suppState_'+today.toDateString(),suppState);buildSupps();}
+buildSupps();
+
+// ============================================================
+//  JOURNAL INIT
+// ============================================================
+buildRatingRows();
+updateJournalDateDisplay();
+(function() {
+  const jcd = document.getElementById('j-cycle-day');
+  if (jcd) jcd.addEventListener('input', function() { updateJournalPhaseLabel(+this.value); });
+})();
+
+// ============================================================
+//  DEBT CALCULATOR
+// ============================================================
+const DEFAULT_DEBTS = [
+  {id:1,name:'Credit card A',balance:3200,rate:22.99,min:85,originalBalance:3200},
+  {id:2,name:'Auto loan',balance:14000,rate:7.5,min:310,originalBalance:14000},
+  {id:3,name:'Personal loan',balance:5000,rate:14.99,min:120,originalBalance:5000},
+];
+let debts = S.get('debts', DEFAULT_DEBTS);
+let debtNextId = Math.max(...debts.map(d=>d.id),0)+1;
+
+function saveDebts() { S.set('debts', debts); }
+
+function renderDashDebt() {
+  const el = document.getElementById('dash-debt-list'); if (!el) return;
+  el.innerHTML = debts.map(d => {
+    const orig = d.originalBalance || d.balance;
+    const paid = orig - d.balance;
+    const pct = Math.min(100, Math.max(0, Math.round(paid / orig * 100)));
+    return `<div class="debt-item">
+      <div class="debt-row">
+        <span class="debt-name">${d.name}</span>
+        <span class="debt-amount">$${d.balance.toLocaleString()} remaining</span>
+      </div>
+      <div class="debt-track"><div class="debt-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function openDebtEditModal() {
+  renderDebtEditList();
+  document.getElementById('debt-edit-modal').classList.add('open');
+}
+function closeDebtEditModal(e) { if (e.target===document.getElementById('debt-edit-modal')) closeDebtEditModalDirect(); }
+function closeDebtEditModalDirect() {
+  document.getElementById('debt-edit-modal').classList.remove('open');
+  saveDebts(); renderDashDebt(); renderDebtInputs(); calcDebt();
+}
+
+function renderDebtEditList() {
+  const el = document.getElementById('debt-edit-list'); if (!el) return;
+  el.innerHTML = debts.map(d => `
+    <div class="debt-input-row" id="dedit-${d.id}">
+      <div class="debt-input-name-row">
+        <input class="debt-input-name" value="${d.name}" onchange="updateDebt(${d.id},'name',this.value);renderDebtEditList();" placeholder="Debt name">
+        <button class="remove-btn" onclick="removeDebt(${d.id});renderDebtEditList();">✕</button>
+      </div>
+      <div class="debt-fields">
+        <div class="field-group">
+          <label>Current balance ($)</label>
+          <input class="field-input" type="number" value="${d.balance}" onchange="updateDebt(${d.id},'balance',+this.value)">
+        </div>
+        <div class="field-group">
+          <label>Original balance ($)</label>
+          <input class="field-input" type="number" value="${d.originalBalance||d.balance}" onchange="updateDebt(${d.id},'originalBalance',+this.value)">
+        </div>
+        <div class="field-group">
+          <label>APR (%)</label>
+          <input class="field-input" type="number" value="${d.rate}" step="0.1" onchange="updateDebt(${d.id},'rate',+this.value)">
+        </div>
+        <div class="field-group">
+          <label>Min. payment ($)</label>
+          <input class="field-input" type="number" value="${d.min}" onchange="updateDebt(${d.id},'min',+this.value)">
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function addDebtFromModal() {
+  debts.push({id:debtNextId++,name:'New debt',balance:1000,rate:15,min:30,originalBalance:1000});
+  renderDebtEditList();
+}
+
+renderDashDebt();
+const barColors=['var(--clay)','var(--mist)','var(--sage)','var(--gold)','var(--bark-light)'];
+
+function renderDebtInputs(){const c=document.getElementById('debt-inputs');if(!c)return;c.innerHTML=debts.map(d=>`<div class="debt-input-row"><div class="debt-input-name-row"><input class="debt-input-name" value="${d.name}" onchange="updateDebt(${d.id},'name',this.value)"><button class="remove-btn" onclick="removeDebt(${d.id})">✕</button></div><div class="debt-fields"><div class="field-group"><label>Balance ($)</label><input class="field-input" type="number" value="${d.balance}" onchange="updateDebt(${d.id},'balance',+this.value)"></div><div class="field-group"><label>APR (%)</label><input class="field-input" type="number" value="${d.rate}" onchange="updateDebt(${d.id},'rate',+this.value)" step="0.1"></div><div class="field-group"><label>Min. payment</label><input class="field-input" type="number" value="${d.min}" onchange="updateDebt(${d.id},'min',+this.value)"></div></div></div>`).join('');}
+function updateDebt(id,field,val){const d=debts.find(d=>d.id===id);if(d){d[field]=val;saveDebts();renderDashDebt();}}
+function addDebt(){debts.push({id:debtNextId++,name:'New debt',balance:1000,rate:15,min:30,originalBalance:1000});saveDebts();renderDebtInputs();renderDashDebt();}
+function removeDebt(id){if(debts.length<=1)return;debts=debts.filter(d=>d.id!==id);saveDebts();renderDebtInputs();renderDashDebt();}
+function updateExtra(val){document.getElementById('extra-display').textContent='$'+val+' / mo extra';}
+function setStrat(s){debtStrategy=s;['snowball','avalanche','compare'].forEach(k=>document.getElementById('sb-'+k).classList.toggle('active',k===s));const descs={snowball:'Pay minimums on everything, then throw every extra dollar at your smallest balance. Each payoff gives you momentum and a freed-up minimum to roll into the next.',avalanche:'Pay minimums on everything, then put extra toward the highest-interest debt first. Mathematically optimal — you pay the least interest overall.',compare:'See both strategies side by side — total interest paid and payoff date — so you can choose what fits your psychology and your math.'};document.getElementById('strat-desc').textContent=descs[s];calcDebt();}
+
+function simPayoff(debtList,extra,order){let bals=debtList.map(d=>({...d,remaining:d.balance}));let month=0,totalInt=0;const pom={};while(bals.some(d=>d.remaining>0.01)&&month<600){month++;let ex=extra;bals=bals.map(d=>{if(d.remaining<=0)return d;const int=d.remaining*(d.rate/100/12);totalInt+=int;let rem=d.remaining+int-d.min;if(rem<0){ex+=Math.abs(rem);rem=0;}if(!pom[d.id]&&rem<=0)pom[d.id]=month;return{...d,remaining:Math.max(0,rem)};});const tgt=order==='snowball'?bals.filter(d=>d.remaining>0).sort((a,b)=>a.remaining-b.remaining)[0]:bals.filter(d=>d.remaining>0).sort((a,b)=>b.rate-a.rate)[0];if(tgt&&ex>0){const idx=bals.findIndex(d=>d.id===tgt.id);bals[idx].remaining=Math.max(0,bals[idx].remaining-ex);if(!pom[tgt.id]&&bals[idx].remaining<=0)pom[tgt.id]=month;}bals.forEach(d=>{if(d.remaining<=0.01&&!pom[d.id])pom[d.id]=month;});}return{totalMonths:Math.max(...Object.values(pom)),totalInterest:Math.round(totalInt),payoffMonths:pom};}
+function mToDate(n){const d=new Date();d.setMonth(d.getMonth()+n);return d.toLocaleDateString('en-US',{month:'short',year:'numeric'});}
+
+function calcDebt(){
+  const extra=parseInt(document.getElementById('extra-slider').value)||0;
+  const res=document.getElementById('debt-results');if(!res)return;
+  if(debtStrategy==='compare'){
+    const sn=simPayoff(debts,extra,'snowball'),av=simPayoff(debts,extra,'avalanche');
+    const snW=sn.totalInterest<=av.totalInterest;
+    res.innerHTML=`<div class="compare-row"><div class="compare-card${snW?' winner':''}"><div class="compare-lbl">Snowball ${snW?'<span class="winner-badge">saves more</span>':''}</div><div class="compare-val">${mToDate(sn.totalMonths)}</div><div class="compare-sub">Debt-free date</div><div style="font-family:var(--serif);font-size:16px;color:var(--ink);margin-top:7px;">$${sn.totalInterest.toLocaleString()}</div><div class="compare-sub">Total interest paid</div></div><div class="compare-card${!snW?' winner':''}"><div class="compare-lbl">Avalanche ${!snW?'<span class="winner-badge">saves more</span>':''}</div><div class="compare-val">${mToDate(av.totalMonths)}</div><div class="compare-sub">Debt-free date</div><div style="font-family:var(--serif);font-size:16px;color:var(--ink);margin-top:7px;">$${av.totalInterest.toLocaleString()}</div><div class="compare-sub">Total interest paid</div></div></div><div style="padding:10px 12px;background:var(--linen);border-radius:var(--radius-sm);font-family:var(--lora);font-style:italic;font-size:12px;color:var(--ink-mid);line-height:1.6;">${snW?`Snowball saves you $${(av.totalInterest-sn.totalInterest).toLocaleString()} in interest. If staying motivated is the challenge, this is your method.`:av.totalInterest<sn.totalInterest?`Avalanche saves you $${(sn.totalInterest-av.totalInterest).toLocaleString()} in interest — the mathematically optimal path.`:'Both strategies cost the same. Choose based on what keeps you motivated.'}</div>`;
+    return;
+  }
+  const result=simPayoff(debts,extra,debtStrategy);
+  const totalMin=debts.reduce((s,d)=>s+d.min,0);
+  const ordered=[...debts].sort((a,b)=>debtStrategy==='snowball'?a.balance-b.balance:b.rate-a.rate);
+  res.innerHTML=`<div class="summary-grid"><div class="sum-cell hi"><div class="sum-lbl">Debt-free date</div><div class="sum-val sage">${mToDate(result.totalMonths)}</div><div class="sum-sub">${result.totalMonths} months</div></div><div class="sum-cell"><div class="sum-lbl">Total interest</div><div class="sum-val">$${result.totalInterest.toLocaleString()}</div></div><div class="sum-cell"><div class="sum-lbl">Monthly total</div><div class="sum-val">$${(totalMin+extra).toLocaleString()}</div><div class="sum-sub">$${extra} extra</div></div></div><hr style="border:none;border-top:1px solid var(--border);margin:14px 0;"><div style="font-size:10px;text-transform:uppercase;letter-spacing:0.09em;color:var(--ink-light);font-weight:500;margin-bottom:11px;">Payoff order — ${debtStrategy==='snowball'?'smallest balance first':'highest rate first'}</div>${ordered.map((d,i)=>{const pct=Math.min(100,Math.round((result.payoffMonths[d.id]||result.totalMonths)/result.totalMonths*100));return`<div class="debt-result-row"><div class="debt-result-header"><div class="debt-result-name"><span class="order-badge">${i+1}</span>${d.name}</div><div class="debt-result-meta"><div class="debt-result-date">${mToDate(result.payoffMonths[d.id]||result.totalMonths)}</div><div>$${d.balance.toLocaleString()} @ ${d.rate}%</div></div></div><div class="bar-track"><div class="bar-fill" style="width:${pct}%;background:${barColors[i%barColors.length]}"></div></div></div>`;}).join('')}`;
+}
+
+renderDebtInputs(); calcDebt();
+
+// ============================================================
+//  CLOUD SYNC INIT
+// ============================================================
+function reloadAllData() {
+  journalEntries = S.get('journalEntries', []);
+  goals          = S.get('goals', DEFAULT_GOALS);
+  goalNextId     = Math.max(...goals.map(g=>g.id), 0) + 1;
+  milestoneNextId= Math.max(...goals.flatMap(g=>g.milestones.map(m=>m.id)), 0) + 1;
+  finRows        = S.get('finRows', [{id:1,label:'Income',amount:5200,type:'income'},{id:2,label:'Fixed expenses',amount:2840,type:'expense'},{id:3,label:'Variable',amount:1120,type:'expense'}]);
+  finNextId      = Math.max(...finRows.map(r=>r.id), 0) + 1;
+  milestones     = S.get('milestones', [{id:1,label:'1 month emergency fund',target:3000,saved:0},{id:2,label:'3 month emergency fund',target:9000,saved:0}]);
+  mileNextId     = Math.max(...milestones.map(m=>m.id), 0) + 1;
+  debts          = S.get('debts', DEFAULT_DEBTS);
+  debtNextId     = Math.max(...debts.map(d=>d.id), 0) + 1;
+  CARDS          = S.get('practiceCards', CARDS);
+  promptIdx      = S.get('promptIdx', 0);
+}
+
+function renderAll() {
+  renderJournalEntries();
+  renderGoals();
+  renderFinance();
+  renderCards();
+  renderDashDebt();
+  renderDebtInputs();
+  calcDebt();
+  buildRatingRows();
+  document.getElementById('journal-prompt-display').textContent = PROMPTS[promptIdx];
+  document.getElementById('dash-prompt').textContent = PROMPTS[promptIdx];
+  // Re-render phase-aware elements with current cycle day
+  const day = getCycleDay();
+  updatePhaseBanner(day);
+  updateWeeklyRhythm(day);
+  updateDailyCard(day);
+  // Sync all cycle day inputs
+  ['cycle-day','banner-cycle-day'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = day;
+  });
+}
+
+(async function init() {
+  // Step 1: Render immediately from local
+  reloadAllData();
+  renderAll();
+
+  const t = document.getElementById('view-title');
+  if (t) t.textContent = getGreeting();
+
+  // Step 2: Sync from Supabase in background
+  const banner = document.getElementById('sync-banner');
+  try {
+    const controller = new AbortController();
+    setTimeout(() => controller.abort(), 8000);
+    const res = await fetch(SUPABASE_URL + '/rest/v1/earthwork_data?select=key,value', {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY },
+      signal: controller.signal
+    });
+    const rows = await res.json();
+    if (Array.isArray(rows) && rows.length) {
+      let changed = false;
+      rows.forEach(row => {
+        if (!isLocalOnly(row.key)) {
+          const existing = localStorage.getItem(row.key);
+          const incoming = JSON.stringify(row.value);
+          if (existing !== incoming) { changed = true; }
+          localStorage.setItem(row.key, incoming);
+        }
+      });
+      if (changed) {
+        reloadAllData();
+        renderAll();
+        if (banner) {
+          banner.style.display = 'flex';
+          banner.textContent = '✓ Synced with latest data';
+          setTimeout(() => { banner.style.display = 'none'; }, 2500);
+        }
+      }
+    }
+  } catch(e) {
+    console.log('Background sync skipped:', e.message);
+  }
+})();
+</script>
+</body>
+</html>
